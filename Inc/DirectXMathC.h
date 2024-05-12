@@ -332,7 +332,8 @@ typedef XM_ALIGNED_STRUCT(16) XMFLOAT4X4A
     };
 } XMFLOAT4X4A;
 
-// Conversion type for constants
+// Conversion types for constants
+
 typedef XM_ALIGNED_STRUCT(16) XMVECTORF32
 {
     union
@@ -342,6 +343,14 @@ typedef XM_ALIGNED_STRUCT(16) XMVECTORF32
     };
 } XMVECTORF32;
 
+typedef XM_ALIGNED_STRUCT(16) XMVECTORI32
+{
+    union
+    {
+        int32_t i[4];
+        XMVECTOR v;
+    };
+}XMVECTORI32;
 
 
 #ifdef _MSC_VER
@@ -394,6 +403,8 @@ XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR0 = { { -1.0f, 0.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR1 = { { 0.0f, -1.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR2 = { { 0.0f, 0.0f, -1.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR3 = { { 0.0f, 0.0f, 0.0f, -1.0f } };
+XMGLOBALCONST XMVECTORI32 g_XMInfinity = { { 0x7F800000, 0x7F800000, 0x7F800000, 0x7F800000 } };
+XMGLOBALCONST XMVECTORI32 g_XMAbsMask = { { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF } };
 
 XMGLOBALCONST XMVECTORF32 g_XMOne = { { 1.0f, 1.0f, 1.0f, 1.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMOne3 = { { 1.0f, 1.0f, 1.0f, 0.0f } };

@@ -1,5 +1,94 @@
 #pragma once
 
+//------------------------------------------------------------------------------
+ // Comparison operations
+ //------------------------------------------------------------------------------
+
+#if !defined(_XM_NO_INTRINSICS_) && defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#pragma float_control(push)
+#pragma float_control(precise, on)
+#endif
+
+// Return true if any entry in the matrix is NaN
+inline bool XM_CALLCONV XMMatrixIsNaN(FXMMATRIX M)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    size_t i = 16;
+    const uint32_t* pWork = (const uint32_t*)(&M->m[0][0]);
+    do {
+        // Fetch value into integer unit
+        uint32_t uTest = pWork[0];
+        // Remove sign
+        uTest &= 0x7FFFFFFFU;
+        // NaN is 0x7F800001 through 0x7FFFFFFF inclusive
+        uTest -= 0x7F800001U;
+        if (uTest < 0x007FFFFFU)
+        {
+            break;      // NaN found
+        }
+        ++pWork;        // Next entry
+    } while (--i);
+    return (i != 0);      // i == 0 if nothing matched
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Load in registers
+    XMVECTOR vX = M->r[0];
+    XMVECTOR vY = M->r[1];
+    XMVECTOR vZ = M->r[2];
+    XMVECTOR vW = M->r[3];
+    // Test themselves to check for NaN
+    vX = _mm_cmpneq_ps(vX, vX);
+    vY = _mm_cmpneq_ps(vY, vY);
+    vZ = _mm_cmpneq_ps(vZ, vZ);
+    vW = _mm_cmpneq_ps(vW, vW);
+    // Or all the results
+    vX = _mm_or_ps(vX, vZ);
+    vY = _mm_or_ps(vY, vW);
+    vX = _mm_or_ps(vX, vY);
+    // If any tested true, return true
+    return (_mm_movemask_ps(vX) != 0);
+#else
+#endif
+}
+
+// Return true if any entry in the matrix is +/-INF
+inline bool XM_CALLCONV XMMatrixIsInfinite(FXMMATRIX M)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    size_t i = 16;
+    auto pWork = reinterpret_cast<const uint32_t*>(&M->m[0][0]);
+    do {
+        // Fetch value into integer unit
+        uint32_t uTest = pWork[0];
+        // Remove sign
+        uTest &= 0x7FFFFFFFU;
+        // INF is 0x7F800000
+        if (uTest == 0x7F800000U)
+        {
+            break;      // INF found
+        }
+        ++pWork;        // Next entry
+    } while (--i);
+    return (i != 0);      // i == 0 if nothing matched
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Mask off the sign bits
+    XMVECTOR vTemp1 = _mm_and_ps(M->r[0], g_XMAbsMask.v);
+    XMVECTOR vTemp2 = _mm_and_ps(M->r[1], g_XMAbsMask.v);
+    XMVECTOR vTemp3 = _mm_and_ps(M->r[2], g_XMAbsMask.v);
+    XMVECTOR vTemp4 = _mm_and_ps(M->r[3], g_XMAbsMask.v);
+    // Compare to infinity
+    vTemp1 = _mm_cmpeq_ps(vTemp1, g_XMInfinity.v);
+    vTemp2 = _mm_cmpeq_ps(vTemp2, g_XMInfinity.v);
+    vTemp3 = _mm_cmpeq_ps(vTemp3, g_XMInfinity.v);
+    vTemp4 = _mm_cmpeq_ps(vTemp4, g_XMInfinity.v);
+    // Or the answers together
+    vTemp1 = _mm_or_ps(vTemp1, vTemp2);
+    vTemp3 = _mm_or_ps(vTemp3, vTemp4);
+    vTemp1 = _mm_or_ps(vTemp1, vTemp3);
+    // If any are infinity, the signs are true.
+    return (_mm_movemask_ps(vTemp1) != 0);
+#endif
+}
+
 // Return true if the XMMatrix is equal to identity
 inline bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M)
 {

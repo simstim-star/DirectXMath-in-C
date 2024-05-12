@@ -4,10 +4,14 @@
 #include "DirectXMathC.h"
 #include "TestCommons.h"
 
+TEST_DECLARE(mat3_is_nan);
+TEST_DECLARE(mat3_is_inf);
 TEST_DECLARE(mat3_is_identity);
 TEST_DECLARE(mat3_mul);
 
 inline void TESTS_Matrix() {
+    TEST(mat3_is_nan);
+    TEST(mat3_is_inf);
     TEST(mat3_is_identity);
     TEST(mat3_mul);
 }
@@ -16,6 +20,38 @@ inline void TESTS_Matrix() {
 #define drand48()  ((float)(rand() / (RAND_MAX + 1.0)))
 
 XMFLOAT3X3 GenerateRandomMatrix();
+
+TEST_DECLARE(mat3_is_nan) {
+    XMFLOAT3X3 NaNMatrix = (XMFLOAT3X3){
+        ._11 = NAN, ._12 = .0f, ._13 = .0f,
+        ._21 = .0f, ._22 = 1.f, ._23 = .0f,
+        ._31 = .0f, ._32 = .0f, ._33 = 1.f,
+    };
+    XMMATRIX NaNMatrix_XMMATRIX = XMLoadFloat3x3(&NaNMatrix);
+    TEST_ASSERT(XMMatrixIsNaN(&NaNMatrix_XMMATRIX))
+
+    XMFLOAT3X3 I = XMFLOAT3X3_IDENTITY;
+    XMMATRIX I_XMMATRIX = XMLoadFloat3x3(&I);
+    TEST_ASSERT(!XMMatrixIsNaN(&I_XMMATRIX))
+
+    TEST_SUCCESS(mat3_is_nan);
+}
+
+TEST_DECLARE(mat3_is_inf) {
+    XMFLOAT3X3 InfMatrix = (XMFLOAT3X3){
+        ._11 = INFINITY, ._12 = .0f, ._13 = .0f,
+        ._21 = .0f, ._22 = 1.f, ._23 = .0f,
+        ._31 = .0f, ._32 = .0f, ._33 = 1.f,
+    };
+    XMMATRIX InfMatrix_XMMATRIX = XMLoadFloat3x3(&InfMatrix);
+    TEST_ASSERT(XMMatrixIsInfinite(&InfMatrix_XMMATRIX))
+
+    XMFLOAT3X3 I = XMFLOAT3X3_IDENTITY;
+    XMMATRIX I_XMMATRIX = XMLoadFloat3x3(&I);
+    TEST_ASSERT(!XMMatrixIsInfinite(&I_XMMATRIX))
+
+    TEST_SUCCESS(mat3_is_inf);
+}
 
 TEST_DECLARE(mat3_is_identity) {
     XMFLOAT3X3 I = XMFLOAT3X3_IDENTITY;
