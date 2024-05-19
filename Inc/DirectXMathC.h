@@ -350,8 +350,16 @@ typedef XM_ALIGNED_STRUCT(16) XMVECTORI32
         int32_t i[4];
         XMVECTOR v;
     };
-}XMVECTORI32;
+} XMVECTORI32;
 
+typedef XM_ALIGNED_STRUCT(16) XMVECTORU32
+{
+    union
+    {
+        uint32_t u[4];
+        XMVECTOR v;
+    };
+} XMVECTORU32;
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -361,11 +369,33 @@ typedef XM_ALIGNED_STRUCT(16) XMVECTORI32
  Load operations
 ****************************************************************************/
 
+inline XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource);
 inline XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource);
 inline XMVECTOR XM_CALLCONV XMLoadFloat(_In_ const float* pSource);
 inline XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource);
 inline void XM_CALLCONV XMStoreFloat4x4(XMFLOAT4X4* pDestination, FXMMATRIX M);
 inline void XM_CALLCONV XMStoreFloat4x4A(XMFLOAT4X4A* pDestination, FXMMATRIX M);
+inline XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource);
+inline XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource);
+
+/****************************************************************************
+ 3D vector operations
+****************************************************************************/
+
+bool XM_CALLCONV XMVector3Equal(FXMVECTOR V1, FXMVECTOR V2);
+bool XM_CALLCONV XMVector3IsInfinite(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVectorZero();
+XMVECTOR XM_CALLCONV XMVectorSet(float x, float y, float z, float w);
+float XM_CALLCONV XMVectorGetX(FXMVECTOR V);
+float XM_CALLCONV XMVectorGetY(FXMVECTOR V);
+float XM_CALLCONV XMVectorGetZ(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVectorMultiply(FXMVECTOR V1, FXMVECTOR V2);
+XMVECTOR XM_CALLCONV XMVector3Normalize(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVector3NormalizeEst(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVectorNegate(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVector3Cross(FXMVECTOR V1, FXMVECTOR V2);
+XMVECTOR XM_CALLCONV XMVector3Dot(FXMVECTOR V1, FXMVECTOR V2);
+XMVECTOR XM_CALLCONV XMVectorSelect(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR Control);
 
 /****************************************************************************
  Matrix operations
@@ -373,6 +403,10 @@ inline void XM_CALLCONV XMStoreFloat4x4A(XMFLOAT4X4A* pDestination, FXMMATRIX M)
 
 inline bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M);
 inline XMMATRIX XM_CALLCONV XMMatrixMultiply(FXMMATRIX M1, CXMMATRIX M2);
+inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M);
+inline XMMATRIX XM_CALLCONV XMMatrixTranslation(float OffsetX, float OffsetY, float OffsetZ);
+inline XMMATRIX XM_CALLCONV XMMatrixLookToLH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
+inline XMMATRIX XM_CALLCONV XMMatrixLookToRH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
 
 
 /****************************************************************************
@@ -395,6 +429,60 @@ inline XMMATRIX XM_CALLCONV XMMatrixMultiply(FXMMATRIX M1, CXMMATRIX M2);
 #endif
 #endif
 
+/****************************************************************************
+ Constant definitions
+****************************************************************************/
+
+#if defined(__XNAMATH_H__) && defined(XM_PI)
+#undef XM_PI
+#undef XM_2PI
+#undef XM_1DIVPI
+#undef XM_1DIV2PI
+#undef XM_PIDIV2
+#undef XM_PIDIV4
+#undef XM_SELECT_0
+#undef XM_SELECT_1
+#undef XM_PERMUTE_0X
+#undef XM_PERMUTE_0Y
+#undef XM_PERMUTE_0Z
+#undef XM_PERMUTE_0W
+#undef XM_PERMUTE_1X
+#undef XM_PERMUTE_1Y
+#undef XM_PERMUTE_1Z
+#undef XM_PERMUTE_1W
+#undef XM_CRMASK_CR6
+#undef XM_CRMASK_CR6TRUE
+#undef XM_CRMASK_CR6FALSE
+#undef XM_CRMASK_CR6BOUNDS
+#undef XM_CACHE_LINE_SIZE
+#endif
+
+#define XM_PI  3.141592654f
+#define XM_2PI  6.283185307f
+#define XM_1DIVPI  0.318309886f
+#define XM_1DIV2PI  0.159154943f
+#define XM_PIDIV2  1.570796327f
+#define XM_PIDIV4  0.785398163f
+#define XM_SELECT_0  0x00000000
+#define XM_SELECT_1  0xFFFFFFFF
+#define XM_PERMUTE_0X  0
+#define XM_PERMUTE_0Y  1
+#define XM_PERMUTE_0Z  2
+#define XM_PERMUTE_0W  3
+#define XM_PERMUTE_1X  4
+#define XM_PERMUTE_1Y  5
+#define XM_PERMUTE_1Z  6
+#define XM_PERMUTE_1W  7
+#define XM_SWIZZLE_X  0
+#define XM_SWIZZLE_Y  1
+#define XM_SWIZZLE_Z  2
+#define XM_SWIZZLE_W  3
+#define XM_CRMASK_CR6  0x000000F0
+#define XM_CRMASK_CR6TRUE  0x00000080
+#define XM_CRMASK_CR6FALSE  0x00000020
+#define XM_CRMASK_CR6BOUNDS  XM_CRMASK_CR6FALSE
+#define XM_CACHE_LINE_SIZE  64
+
 XMGLOBALCONST XMVECTORF32 g_XMIdentityR0 = { { 1.0f, 0.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMIdentityR1 = { { 0.0f, 1.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMIdentityR2 = { { 0.0f, 0.0f, 1.0f, 0.0f } };
@@ -404,8 +492,21 @@ XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR1 = { { 0.0f, -1.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR2 = { { 0.0f, 0.0f, -1.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR3 = { { 0.0f, 0.0f, 0.0f, -1.0f } };
 XMGLOBALCONST XMVECTORI32 g_XMInfinity = { { 0x7F800000, 0x7F800000, 0x7F800000, 0x7F800000 } };
+XMGLOBALCONST XMVECTORI32 g_XMQNaN = { { 0x7FC00000, 0x7FC00000, 0x7FC00000, 0x7FC00000 } };
 XMGLOBALCONST XMVECTORI32 g_XMAbsMask = { { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF } };
-
+XMGLOBALCONST XMVECTORU32 g_XMMaskXY = { { { 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000 } } };
+XMGLOBALCONST XMVECTORU32 g_XMMask3 = { { { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000 } } };
+XMGLOBALCONST XMVECTORU32 g_XMMaskX = { { { 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000 } } };
+XMGLOBALCONST XMVECTORU32 g_XMMaskY = { { { 0x00000000, 0xFFFFFFFF, 0x00000000, 0x00000000 } } };
+XMGLOBALCONST XMVECTORU32 g_XMMaskZ = { { { 0x00000000, 0x00000000, 0xFFFFFFFF, 0x00000000 } } };
+XMGLOBALCONST XMVECTORU32 g_XMMaskW = { { { 0x00000000, 0x00000000, 0x00000000, 0xFFFFFFFF } } };
+XMGLOBALCONST XMVECTORU32 g_XMSelect0101 = { { { XM_SELECT_0, XM_SELECT_1, XM_SELECT_0, XM_SELECT_1 } } };
+XMGLOBALCONST XMVECTORU32 g_XMSelect1010 = { { { XM_SELECT_1, XM_SELECT_0, XM_SELECT_1, XM_SELECT_0 } } };
+XMGLOBALCONST XMVECTORI32 g_XMOneHalfMinusEpsilon = { { { 0x3EFFFFFD, 0x3EFFFFFD, 0x3EFFFFFD, 0x3EFFFFFD } } };
+XMGLOBALCONST XMVECTORU32 g_XMSelect1000 = { { { XM_SELECT_1, XM_SELECT_0, XM_SELECT_0, XM_SELECT_0 } } };
+XMGLOBALCONST XMVECTORU32 g_XMSelect1100 = { { { XM_SELECT_1, XM_SELECT_1, XM_SELECT_0, XM_SELECT_0 } } };
+XMGLOBALCONST XMVECTORU32 g_XMSelect1110 = { { { XM_SELECT_1, XM_SELECT_1, XM_SELECT_1, XM_SELECT_0 } } };
+XMGLOBALCONST XMVECTORU32 g_XMSelect1011 = { { { XM_SELECT_1, XM_SELECT_0, XM_SELECT_1, XM_SELECT_1 } } };
 XMGLOBALCONST XMVECTORF32 g_XMOne = { { 1.0f, 1.0f, 1.0f, 1.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMOne3 = { { 1.0f, 1.0f, 1.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMZero = { { 0.0f, 0.0f, 0.0f, 0.0f } };
@@ -424,7 +525,12 @@ XMGLOBALCONST XMVECTORF32 g_XMZero = { { 0.0f, 0.0f, 0.0f, 0.0f } };
         ._31 = .0f, ._32 = .0f, ._33 = 1.f, \
 };
 
+/****************************************************************************
+ Miscellaneous operations
+****************************************************************************/
 
+inline bool XMScalarNearEqual(float S1,	float S2, float Epsilon);
+inline void XMScalarSinCos(float* pSin,float* pCos,float  Value);
 
 /****************************************************************************
  Add inline implementations
@@ -433,3 +539,5 @@ XMGLOBALCONST XMVECTORF32 g_XMZero = { { 0.0f, 0.0f, 0.0f, 0.0f } };
 
 #include "DirectXMathCMatrix.inl"
 #include "DirectXMathCConvert.inl"
+#include "DirectXMathCVector.inl"
+#include "DirectXMathCMisc.inl"

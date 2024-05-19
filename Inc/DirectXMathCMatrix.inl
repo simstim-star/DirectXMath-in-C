@@ -245,3 +245,222 @@ inline XMMATRIX XM_CALLCONV XMMatrixMultiply
     return mResult;
 #endif
 }
+
+inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    // Original matrix:
+    //
+    //     m00m01m02m03
+    //     m10m11m12m13
+    //     m20m21m22m23
+    //     m30m31m32m33
+
+    XMMATRIX P;
+    P.r[0] = XMVectorMergeXY(M.r[0], M.r[2]); // m00m20m01m21
+    P.r[1] = XMVectorMergeXY(M.r[1], M.r[3]); // m10m30m11m31
+    P.r[2] = XMVectorMergeZW(M.r[0], M.r[2]); // m02m22m03m23
+    P.r[3] = XMVectorMergeZW(M.r[1], M.r[3]); // m12m32m13m33
+
+    XMMATRIX MT;
+    MT.r[0] = XMVectorMergeXY(P.r[0], P.r[1]); // m00m10m20m30
+    MT.r[1] = XMVectorMergeZW(P.r[0], P.r[1]); // m01m11m21m31
+    MT.r[2] = XMVectorMergeXY(P.r[2], P.r[3]); // m02m12m22m32
+    MT.r[3] = XMVectorMergeZW(P.r[2], P.r[3]); // m03m13m23m33
+    return MT;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    // x.x,x.y,y.x,y.y
+    XMVECTOR vTemp1 = _mm_shuffle_ps(M->r[0], M->r[1], _MM_SHUFFLE(1, 0, 1, 0));
+    // x.z,x.w,y.z,y.w
+    XMVECTOR vTemp3 = _mm_shuffle_ps(M->r[0], M->r[1], _MM_SHUFFLE(3, 2, 3, 2));
+    // z.x,z.y,w.x,w.y
+    XMVECTOR vTemp2 = _mm_shuffle_ps(M->r[2], M->r[3], _MM_SHUFFLE(1, 0, 1, 0));
+    // z.z,z.w,w.z,w.w
+    XMVECTOR vTemp4 = _mm_shuffle_ps(M->r[2], M->r[3], _MM_SHUFFLE(3, 2, 3, 2));
+
+    XMMATRIX mResult;
+    // x.x,y.x,z.x,w.x
+    mResult.r[0] = _mm_shuffle_ps(vTemp1, vTemp2, _MM_SHUFFLE(2, 0, 2, 0));
+    // x.y,y.y,z.y,w.y
+    mResult.r[1] = _mm_shuffle_ps(vTemp1, vTemp2, _MM_SHUFFLE(3, 1, 3, 1));
+    // x.z,y.z,z.z,w.z
+    mResult.r[2] = _mm_shuffle_ps(vTemp3, vTemp4, _MM_SHUFFLE(2, 0, 2, 0));
+    // x.w,y.w,z.w,w.w
+    mResult.r[3] = _mm_shuffle_ps(vTemp3, vTemp4, _MM_SHUFFLE(3, 1, 3, 1));
+    return mResult;
+#endif
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixTranslation
+(
+    float OffsetX,
+    float OffsetY,
+    float OffsetZ
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMMATRIX M;
+    M.m[0][0] = 1.0f;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = 1.0f;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = 1.0f;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = OffsetX;
+    M.m[3][1] = OffsetY;
+    M.m[3][2] = OffsetZ;
+    M.m[3][3] = 1.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMMATRIX M;
+    M.r[0] = g_XMIdentityR0.v;
+    M.r[1] = g_XMIdentityR1.v;
+    M.r[2] = g_XMIdentityR2.v;
+    M.r[3] = XMVectorSet(OffsetX, OffsetY, OffsetZ, 1.f);
+    return M;
+#endif
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixLookToLH
+(
+    FXMVECTOR EyePosition,
+    FXMVECTOR EyeDirection,
+    FXMVECTOR UpDirection
+)
+{
+    XMVECTOR Zero = XMVectorZero();
+    assert(!XMVector3Equal(EyeDirection, &g_XMZero.v));
+    assert(!XMVector3IsInfinite(EyeDirection));
+    assert(!XMVector3Equal(UpDirection, &g_XMZero.v));
+    assert(!XMVector3IsInfinite(UpDirection));
+
+    XMVECTOR R2 = XMVector3Normalize(EyeDirection);
+
+    XMVECTOR R0 = XMVector3Cross(UpDirection, &R2);
+    R0 = XMVector3Normalize(&R0);
+
+    XMVECTOR R1 = XMVector3Cross(&R2, &R0);
+
+    XMVECTOR NegEyePosition = XMVectorNegate(EyePosition);
+
+    XMVECTOR D0 = XMVector3Dot(&R0, &NegEyePosition);
+    XMVECTOR D1 = XMVector3Dot(&R1, &NegEyePosition);
+    XMVECTOR D2 = XMVector3Dot(&R2, &NegEyePosition);
+
+    XMMATRIX M;
+    M.r[0] = XMVectorSelect(&D0, &R0, &g_XMSelect1110.v);
+    M.r[1] = XMVectorSelect(&D1, &R1, &g_XMSelect1110.v);
+    M.r[2] = XMVectorSelect(&D2, &R2, &g_XMSelect1110.v);
+    M.r[3] = g_XMIdentityR3.v;
+
+    M = XMMatrixTranspose(&M);
+
+    return M;
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixLookToRH
+(
+    FXMVECTOR EyePosition,
+    FXMVECTOR EyeDirection,
+    FXMVECTOR UpDirection
+)
+{
+    XMVECTOR NegEyeDirection = XMVectorNegate(EyeDirection);
+    return XMMatrixLookToLH(EyePosition, &NegEyeDirection, UpDirection);
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovRH
+(
+    float FovAngleY,
+    float AspectRatio,
+    float NearZ,
+    float FarZ
+)
+{
+    assert(NearZ > 0.f && FarZ > 0.f);
+    assert(!XMScalarNearEqual(FovAngleY, 0.0f, 0.00001f * 2.0f));
+    assert(!XMScalarNearEqual(AspectRatio, 0.0f, 0.00001f));
+    assert(!XMScalarNearEqual(FarZ, NearZ, 0.00001f));
+
+#if defined(_XM_NO_INTRINSICS_)
+
+    float    SinFov;
+    float    CosFov;
+    XMScalarSinCos(&SinFov, &CosFov, 0.5f * FovAngleY);
+
+    float Height = CosFov / SinFov;
+    float Width = Height / AspectRatio;
+    float fRange = FarZ / (NearZ - FarZ);
+
+    XMMATRIX M;
+    M.m[0][0] = Width;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = Height;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = fRange;
+    M.m[2][3] = -1.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = fRange * NearZ;
+    M.m[3][3] = 0.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    float    SinFov;
+    float    CosFov;
+    XMScalarSinCos(&SinFov, &CosFov, 0.5f * FovAngleY);
+    float fRange = FarZ / (NearZ - FarZ);
+    // Note: This is recorded on the stack
+    float Height = CosFov / SinFov;
+    XMVECTOR rMem = {
+        Height / AspectRatio,
+        Height,
+        fRange,
+        fRange * NearZ
+    };
+    // Copy from memory to SSE register
+    XMVECTOR vValues = rMem;
+    XMVECTOR vTemp = _mm_setzero_ps();
+    // Copy x only
+    vTemp = _mm_move_ss(vTemp, vValues);
+    // Height / AspectRatio,0,0,0
+    XMMATRIX M;
+    M.r[0] = vTemp;
+    // 0,Height,0,0
+    vTemp = vValues;
+    vTemp = _mm_and_ps(vTemp, g_XMMaskY.v);
+    M.r[1] = vTemp;
+    // x=fRange,y=-fRange * NearZ,0,-1.0f
+    vTemp = _mm_setzero_ps();
+    vValues = _mm_shuffle_ps(vValues, g_XMNegIdentityR3.v, _MM_SHUFFLE(3, 2, 3, 2));
+    // 0,0,fRange,-1.0f
+    vTemp = _mm_shuffle_ps(vTemp, vValues, _MM_SHUFFLE(3, 0, 0, 0));
+    M.r[2] = vTemp;
+    // 0,0,fRange * NearZ,0.0f
+    vTemp = _mm_shuffle_ps(vTemp, vValues, _MM_SHUFFLE(2, 1, 0, 0));
+    M.r[3] = vTemp;
+    return M;
+#endif
+}
