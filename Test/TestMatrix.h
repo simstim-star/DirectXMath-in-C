@@ -70,26 +70,27 @@ TEST_DECLARE(mat3_is_identity) {
 }
 
 TEST_DECLARE(mat3_mul) {
-    XMFLOAT3X3 A = GenerateRandomMatrix();
-    XMFLOAT3X3 B = GenerateRandomMatrix();
+    for (int i = 0; i < 100000; ++i) {
+        XMFLOAT3X3 A = GenerateRandomMatrix();
+        XMFLOAT3X3 B = GenerateRandomMatrix();
 
-    XMFLOAT4X4 C = XMFLOAT4X4_ZERO;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            for (int k = 0; k < 3; k++) {
-                C.m[i][j] += A.m[i][k] * B.m[k][j];
+        XMFLOAT4X4 C = XMFLOAT4X4_ZERO;
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                for (int k = 0; k < 3; k++) {
+                    C.m[i][j] += A.m[i][k] * B.m[k][j];
+                }
             }
         }
-    }
-    XMMATRIX A_XMMATRIX = XMLoadFloat3x3(&A);
-    XMMATRIX B_XMMATRIX = XMLoadFloat3x3(&B);
-    XMMATRIX C_XMMATRIX = XMMatrixMultiply(&A_XMMATRIX, &B_XMMATRIX);
-    XMFLOAT4X4 result;
-    XMStoreFloat4x4(&result, &C_XMMATRIX);
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            TEST_ASSERT(fabsf(result.m[i][j] - C.m[i][j]) < EPSILON)
+        XMMATRIX A_XMMATRIX = XMLoadFloat3x3(&A);
+        XMMATRIX B_XMMATRIX = XMLoadFloat3x3(&B);
+        XMMATRIX C_XMMATRIX = XMMatrixMultiply(&A_XMMATRIX, &B_XMMATRIX);
+        XMFLOAT4X4 result;
+        XMStoreFloat4x4(&result, &C_XMMATRIX);
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                TEST_ASSERT(fabsf(result.m[i][j] - C.m[i][j]) < EPSILON)
+            }
         }
     }
     TEST_SUCCESS(mat3_mul);

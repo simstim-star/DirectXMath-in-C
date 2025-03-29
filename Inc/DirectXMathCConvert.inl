@@ -107,6 +107,45 @@ inline XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource)
 #endif
 }
 
+_Use_decl_annotations_
+inline void XM_CALLCONV XMStoreFloat
+(
+    float* pDestination,
+    FXMVECTOR V
+)
+{
+    assert(pDestination);
+#if defined(_XM_NO_INTRINSICS_)
+    *pDestination = XMVectorGetX(V);
+#elif defined(_XM_SSE_INTRINSICS_)
+    _mm_store_ss(pDestination, *V);
+#endif
+}
+
+
+_Use_decl_annotations_
+inline void XM_CALLCONV XMStoreFloat3
+(
+    XMFLOAT3* pDestination,
+    FXMVECTOR V
+)
+{
+    assert(pDestination);
+#if defined(_XM_NO_INTRINSICS_)
+    pDestination->x = V->vector4_f32[0];
+    pDestination->y = V->vector4_f32[1];
+    pDestination->z = V->vector4_f32[2];
+#elif defined(_XM_SSE4_INTRINSICS_)
+    * (int*)(&pDestination->x) = _mm_extract_ps(*V, 0);
+    *(int*)(&pDestination->y) = _mm_extract_ps(*V, 1);
+    *(int*)(&pDestination->z) = _mm_extract_ps(*V, 2);
+#elif defined(_XM_SSE_INTRINSICS_)
+    _mm_store_sd((double*)(pDestination), _mm_castps_pd(*V));
+    __m128 z = XM_PERMUTE_PS(*V, _MM_SHUFFLE(2, 2, 2, 2));
+    _mm_store_ss(&pDestination->z, z);
+#endif
+}
+
 
 inline void XM_CALLCONV XMStoreFloat4x4
 (

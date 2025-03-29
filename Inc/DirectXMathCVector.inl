@@ -1,5 +1,4 @@
 #pragma once
-#include "DirectXMathC.h"
 
 // Initialize a vector with four floating point values
 inline XMVECTOR XM_CALLCONV XMVectorSet
@@ -107,6 +106,59 @@ inline XMVECTOR XM_CALLCONV XMVectorMultiply
     return Result.v;
 #elif defined(_XM_SSE_INTRINSICS_)
     return _mm_mul_ps(*V1, *V2);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorDivide
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            V1->vector4_f32[0] / V2->vector4_f32[0],
+            V1->vector4_f32[1] / V2->vector4_f32[1],
+            V1->vector4_f32[2] / V2->vector4_f32[2],
+            V1->vector4_f32[3] / V2->vector4_f32[3]
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_div_ps(*V1, *V2);
+#endif
+}
+
+// Initialize a vector with a replicated floating point value
+inline XMVECTOR XM_CALLCONV XMVectorReplicate(float Value)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 vResult;
+    vResult.f[0] =
+        vResult.f[1] =
+        vResult.f[2] =
+        vResult.f[3] = Value;
+    return vResult.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_set_ps1(Value);
+#endif
+}
+
+// Initialize a vector with a replicated floating point value passed by pointer
+_Use_decl_annotations_
+inline XMVECTOR XM_CALLCONV XMVectorReplicatePtr(const float* pValue)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    float Value = pValue[0];
+    XMVECTORF32 vResult;
+    vResult.f[0] =
+        vResult.f[1] =
+        vResult.f[2] =
+        vResult.f[3] = Value;
+    return vResult.v;
+#elif defined(_XM_AVX_INTRINSICS_)
+    return _mm_broadcast_ss(pValue);
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_load_ps1(pValue);
 #endif
 }
 
@@ -321,5 +373,170 @@ inline XMVECTOR XM_CALLCONV XMVectorSelect
     XMVECTOR vTemp1 = _mm_andnot_ps(*Control, *V1);
     XMVECTOR vTemp2 = _mm_and_ps(*V2, *Control);
     return _mm_or_ps(vTemp1, vTemp2);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSubtract
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            V1->vector4_f32[0] - V2->vector4_f32[0],
+            V1->vector4_f32[1] - V2->vector4_f32[1],
+            V1->vector4_f32[2] - V2->vector4_f32[2],
+            V1->vector4_f32[3] - V2->vector4_f32[3]
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_sub_ps(*V1, *V2);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVector3LengthSq(FXMVECTOR V)
+{
+    return XMVector3Dot(V, V);
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSqrt(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            sqrtf(V->vector4_f32[0]),
+            sqrtf(V->vector4_f32[1]),
+            sqrtf(V->vector4_f32[2]),
+            sqrtf(V->vector4_f32[3])
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_sqrt_ps(*V);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTOR Result;
+
+    Result = XMVector3LengthSq(V);
+    Result = XMVectorSqrt(&Result);
+
+    return Result;
+#elif defined(_XM_SSE4_INTRINSICS_)
+    XMVECTOR vTemp = _mm_dp_ps(*V, *V, 0x7f);
+    return _mm_sqrt_ps(vTemp);
+#elif defined(_XM_SSE3_INTRINSICS_)
+    XMVECTOR vLengthSq = _mm_mul_ps(*V, *V);
+    vLengthSq = _mm_and_ps(vLengthSq, g_XMMask3);
+    vLengthSq = _mm_hadd_ps(vLengthSq, vLengthSq);
+    vLengthSq = _mm_hadd_ps(vLengthSq, vLengthSq);
+    vLengthSq = _mm_sqrt_ps(vLengthSq);
+    return vLengthSq;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Perform the dot product on x,y and z
+    XMVECTOR vLengthSq = _mm_mul_ps(*V, *V);
+    // vTemp has z and y
+    XMVECTOR vTemp = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(1, 2, 1, 2));
+    // x+z, y
+    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
+    // y,y,y,y
+    vTemp = XM_PERMUTE_PS(vTemp, _MM_SHUFFLE(1, 1, 1, 1));
+    // x+z+y,??,??,??
+    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
+    // Splat the length squared
+    vLengthSq = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(0, 0, 0, 0));
+    // Get the length
+    vLengthSq = _mm_sqrt_ps(vLengthSq);
+    return vLengthSq;
+#endif
+}
+
+inline bool XM_CALLCONV XMVector3Greater
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    return (((V1->vector4_f32[0] > V2->vector4_f32[0]) && (V1->vector4_f32[1] > V2->vector4_f32[1]) && (V1->vector4_f32[2] > V2->vector4_f32[2])) != 0);
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR vTemp = _mm_cmpgt_ps(*V1, *V2);
+    return (((_mm_movemask_ps(vTemp) & 7) == 7) != 0);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorLerp
+(
+    FXMVECTOR V0,
+    FXMVECTOR V1,
+    float    t
+) 
+{
+    // V0 + t * (V1 - V0)
+
+#if defined(_XM_NO_INTRINSICS_)
+    // TODO
+    XMVECTOR Scale = XMVectorReplicate(t);
+    XMVECTOR Length = XMVectorSubtract(V1, V0);
+    return XMVectorMultiplyAdd(Length, Scale, V0);
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR L = _mm_sub_ps(*V1, *V0);
+    XMVECTOR S = _mm_set_ps1(t);
+    return XM_FMADD_PS(L, S, *V0);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorScale
+(
+    FXMVECTOR V,
+    float    ScaleFactor
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            V->vector4_f32[0] * ScaleFactor,
+            V->vector4_f32[1] * ScaleFactor,
+            V->vector4_f32[2] * ScaleFactor,
+            V->vector4_f32[3] * ScaleFactor
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR vResult = _mm_set_ps1(ScaleFactor);
+    return _mm_mul_ps(vResult, *V);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorAdd
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            V1->vector4_f32[0] + V2->vector4_f32[0],
+            V1->vector4_f32[1] + V2->vector4_f32[1],
+            V1->vector4_f32[2] + V2->vector4_f32[2],
+            V1->vector4_f32[3] + V2->vector4_f32[3]
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_add_ps(*V1, *V2);
+#endif
+}
+
+inline bool XM_CALLCONV XMVector3LessOrEqual
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    return (((V1->vector4_f32[0] <= V2->vector4_f32[0]) && (V1->vector4_f32[1] <= V2->vector4_f32[1]) && (V1->vector4_f32[2] <= V2->vector4_f32[2])) != 0);
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR vTemp = _mm_cmple_ps(*V1, *V2);
+    return (((_mm_movemask_ps(vTemp) & 7) == 7) != 0);
 #endif
 }

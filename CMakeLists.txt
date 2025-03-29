@@ -11,7 +11,9 @@ set(LIBRARY_HEADERS
     Inc/DirectXMathCConvert.inl
     Inc/DirectXMathCMatrix.inl
     Inc/DirectXMathCVector.inl
-    Inc/DirectXMathCMisc.inl)
+    Inc/DirectXMathCMisc.inl
+    Inc/DirectXCCollision.h
+    Inc/DirectXCCollision.inl)
 
 option(XM_USE_TEST "Enable Tests" OFF)
 option(XM_NO_INTRINSICS "Disable intrinsics" OFF)

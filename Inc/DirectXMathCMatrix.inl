@@ -55,7 +55,7 @@ inline bool XM_CALLCONV XMMatrixIsInfinite(FXMMATRIX M)
 {
 #if defined(_XM_NO_INTRINSICS_)
     size_t i = 16;
-    auto pWork = reinterpret_cast<const uint32_t*>(&M->m[0][0]);
+    const uint32_t* pWork = (const uint32_t*)(&M->m[0][0]);
     do {
         // Fetch value into integer unit
         uint32_t uTest = pWork[0];
@@ -258,10 +258,10 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M)
     //     m30m31m32m33
 
     XMMATRIX P;
-    P.r[0] = XMVectorMergeXY(M.r[0], M.r[2]); // m00m20m01m21
-    P.r[1] = XMVectorMergeXY(M.r[1], M.r[3]); // m10m30m11m31
-    P.r[2] = XMVectorMergeZW(M.r[0], M.r[2]); // m02m22m03m23
-    P.r[3] = XMVectorMergeZW(M.r[1], M.r[3]); // m12m32m13m33
+    P.r[0] = XMVectorMergeXY(M->r[0], M->r[2]); // m00m20m01m21
+    P.r[1] = XMVectorMergeXY(M->r[1], M->r[3]); // m10m30m11m31
+    P.r[2] = XMVectorMergeZW(M->r[0], M->r[2]); // m02m22m03m23
+    P.r[3] = XMVectorMergeZW(M->r[1], M->r[3]); // m12m32m13m33
 
     XMMATRIX MT;
     MT.r[0] = XMVectorMergeXY(P.r[0], P.r[1]); // m00m10m20m30

@@ -1,5 +1,4 @@
 #pragma once
-#include "DirectXMathC.h"
 #include <math.h>
 
 inline bool XMScalarNearEqual
