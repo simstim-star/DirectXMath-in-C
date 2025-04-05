@@ -6,7 +6,7 @@
 
 #define TEST(FUN) test_ ## FUN()
 #define TEST_DECLARE(FUN) inline void test_ ## FUN(void)
-#define TEST_SUCCESS(FUN) fprintf(stderr, GREEN  "  " OK_TEXT RESET " %-*s  \n", 2, # FUN)
+#define TEST_SUCCESS(FUN) fprintf(stdout, GREEN  "  " OK_TEXT RESET " %-*s  \n", 2, # FUN)
 #define TEST_LOG_FAILED(TEST_NAME) fprintf(stderr, RED "%s" RESET ": unit test failed\n", TEST_NAME)
 
 #define TEST_ASSERT(expr)                          \

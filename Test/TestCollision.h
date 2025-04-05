@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "DirectXCCollision.h"
+#include "DirectXCollisionC.h"
 #include "TestCommons.h"
-#include <DirectXCCollision.h>
 
 #define printsh(v) fprintf(stderr, "%s: center=%f,%f,%f  radius=%f\n", #v, v.center.x, v.center.y, v.center.z, v.r)
 
@@ -25,23 +24,23 @@ inline void TESTS_Collision() {
     TEST(bounding_sphere_from_points);
 }
 
-#define EPSILON 0.0000009
+#define COLLISION_TEST_EPSILON 0.00001
 
-inline bool spheres_equal(const dx_bounding_sphere *const s1, const dx_bounding_sphere *const s2)
+inline bool SpheresEqual(const DirectX_BoundingSphere *const s1, const DirectX_BoundingSphere *const s2)
 {
-    return ((fabs(s1->center.x - s2->center.x) < EPSILON)
-        && (fabs(s1->center.y - s2->center.y) < EPSILON)
-        && (fabs(s1->center.z - s2->center.z) < EPSILON)
-        && (fabs(s1->r - s2->r) < EPSILON));
+    return ((fabs(s1->center.x - s2->center.x) < COLLISION_TEST_EPSILON)
+        && (fabs(s1->center.y - s2->center.y) < COLLISION_TEST_EPSILON)
+        && (fabs(s1->center.z - s2->center.z) < COLLISION_TEST_EPSILON)
+        && (fabs(s1->r - s2->r) < COLLISION_TEST_EPSILON));
 }
 
 TEST_DECLARE(bounding_sphere_merged) {
     bool success = true;
-    dx_bounding_sphere sht;
+    DirectX_BoundingSphere sht;
 
-    const dx_bounding_sphere unit = { {0,0,0}, 1 };
-    dx_bounding_sphere_merged(&sht, &unit, &unit);
-    if (!spheres_equal(&sht, &unit))
+    const DirectX_BoundingSphere unit = { {0,0,0}, 1 };
+    DirectX_BoundingSphere_Merged(&sht, &unit, &unit);
+    if (!SpheresEqual(&sht, &unit))
     {
         TEST_LOG_FAILED("bounding_sphere_merged - empty merge");
         printsh(unit);
@@ -50,9 +49,9 @@ TEST_DECLARE(bounding_sphere_merged) {
     }
 
 
-    const dx_bounding_sphere _small = { {0.1f, 0.0f, 0.0f }, 0.5f };
-    dx_bounding_sphere_merged(&sht, &unit, &_small);
-    if (!spheres_equal(&unit, &sht))
+    const DirectX_BoundingSphere _small = { {0.1f, 0.0f, 0.0f }, 0.5f };
+    DirectX_BoundingSphere_Merged(&sht, &unit, &_small);
+    if (!SpheresEqual(&unit, &sht))
     {
         TEST_LOG_FAILED("bounding_sphere_merged - small test");
         printsh(unit);
@@ -61,9 +60,9 @@ TEST_DECLARE(bounding_sphere_merged) {
         success = false;
     }
 
-    const dx_bounding_sphere big = { {1.f, 2.f, 3.f}, 10.0f };
-    dx_bounding_sphere_merged(&sht, &unit, &big);
-    if (!spheres_equal(&sht, &big))
+    const DirectX_BoundingSphere big = { {1.f, 2.f, 3.f}, 10.0f };
+    DirectX_BoundingSphere_Merged(&sht, &unit, &big);
+    if (!SpheresEqual(&sht, &big))
     {
         TEST_LOG_FAILED("bounding_sphere_merged - big test");
         printsh(unit);
@@ -72,11 +71,11 @@ TEST_DECLARE(bounding_sphere_merged) {
         success = false;
     }
 
-    const dx_bounding_sphere _far = { {10.f, -5.f, 4.f}, 2.0f };
-    dx_bounding_sphere_merged(&sht, &_far, &big);
+    const DirectX_BoundingSphere _far = { {10.f, -5.f, 4.f}, 2.0f };
+    DirectX_BoundingSphere_Merged(&sht, &_far, &big);
 
-    const dx_bounding_sphere result = { {2.354666f, 0.946371f, 3.150518f}, 11.722761f };
-    if (!spheres_equal(&sht, &result))
+    const DirectX_BoundingSphere result = { {2.354666f, 0.946371f, 3.150518f}, 11.722761f };
+    if (!SpheresEqual(&sht, &result))
     {
         TEST_LOG_FAILED("bounding_sphere_merged - _far-big test ");
         printsh(_far);
@@ -87,12 +86,12 @@ TEST_DECLARE(bounding_sphere_merged) {
     }
 
     {
-        const dx_bounding_sphere sph2 = { {2.f, 0, 0}, 1.0f };
+        const DirectX_BoundingSphere sph2 = { {2.f, 0, 0}, 1.0f };
 
-        dx_bounding_sphere_merged(&sht, &unit, &sph2);
+        DirectX_BoundingSphere_Merged(&sht, &unit, &sph2);
 
-        const dx_bounding_sphere result2 = { {1.f, 0, 0}, 2.0f };
-        if (!spheres_equal(&sht, &result2))
+        const DirectX_BoundingSphere result2 = { {1.f, 0, 0}, 2.0f };
+        if (!SpheresEqual(&sht, &result2))
         {
             TEST_LOG_FAILED("bounding_sphere_merged - create merge test1");
             printsh(unit);
@@ -104,12 +103,12 @@ TEST_DECLARE(bounding_sphere_merged) {
     }
 
     {
-        const dx_bounding_sphere sph1 = { {0, 0, 0}, 5.f };
-        const dx_bounding_sphere sph2 = { {2.f, 0, 0}, 1.f };
+        const DirectX_BoundingSphere sph1 = { {0, 0, 0}, 5.f };
+        const DirectX_BoundingSphere sph2 = { {2.f, 0, 0}, 1.f };
 
-        dx_bounding_sphere_merged(&sht, &sph1, &sph2);
+        DirectX_BoundingSphere_Merged(&sht, &sph1, &sph2);
 
-        if (!spheres_equal(&sht, &sph1))
+        if (!SpheresEqual(&sht, &sph1))
         {
             TEST_LOG_FAILED("bounding_sphere_merged - create merge test2");
             printsh(sph1);
@@ -120,11 +119,11 @@ TEST_DECLARE(bounding_sphere_merged) {
     }
 
     {
-        const dx_bounding_sphere sph2 = { {2.f, 0, 0}, 5.f };
+        const DirectX_BoundingSphere sph2 = { {2.f, 0, 0}, 5.f };
 
-        dx_bounding_sphere_merged(&sht, &unit, &sph2);
+        DirectX_BoundingSphere_Merged(&sht, &unit, &sph2);
 
-        if (!spheres_equal(&sht, &sph2))
+        if (!SpheresEqual(&sht, &sph2))
         {
             TEST_LOG_FAILED("bounding_sphere_merged - create merge test3");
             printsh(unit);
@@ -135,11 +134,11 @@ TEST_DECLARE(bounding_sphere_merged) {
     }
 
     {
-        const dx_bounding_sphere sph2 = { {0, 0, 0}, 2.f };
+        const DirectX_BoundingSphere sph2 = { {0, 0, 0}, 2.f };
 
-        dx_bounding_sphere_merged(&sht, &unit, &sph2);
+        DirectX_BoundingSphere_Merged(&sht, &unit, &sph2);
 
-        if (!spheres_equal(&sht, &sph2))
+        if (!SpheresEqual(&sht, &sph2))
         {
             TEST_LOG_FAILED("bounding_sphere_merged - create merge test4");
             printsh(unit);
@@ -160,11 +159,11 @@ TEST_DECLARE(bounding_sphere_from_points) {
     {
         const float points[] = { 0, 0, 0, 1.f, 0, 0 };
 
-        dx_bounding_sphere sht;
-        dx_bounding_sphere_from_points(&sht, 2, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
+        DirectX_BoundingSphere sht;
+        DirectX_BoundingSphere_FromPoints(&sht, 2, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
 
-        const dx_bounding_sphere result = { {0.5f, 0, 0}, 0.5f };
-        if (!spheres_equal(&sht, &result))
+        const DirectX_BoundingSphere result = { {0.5f, 0, 0}, 0.5f };
+        if (!SpheresEqual(&sht, &result))
         {
             TEST_LOG_FAILED("bounding_sphere_from_points - creating from points test1");
             printsh(sht);
@@ -176,11 +175,11 @@ TEST_DECLARE(bounding_sphere_from_points) {
     {
         const float points[] = { 0, 0, 0, 0.5f, 0, 1.0f };
 
-        dx_bounding_sphere sht;
-        dx_bounding_sphere_from_points(&sht, 2, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
+        DirectX_BoundingSphere sht;
+        DirectX_BoundingSphere_FromPoints(&sht, 2, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
 
-        const dx_bounding_sphere result = { {0.25f, 0, 0.5f}, 0.559017f };
-        if (!spheres_equal(&sht, &result))
+        const DirectX_BoundingSphere result = { {0.25f, 0, 0.5f}, 0.559017f };
+        if (!SpheresEqual(&sht, &result))
         {
             TEST_LOG_FAILED("bounding_sphere_from_points - creating from points test2");
             printsh(sht);
@@ -192,11 +191,11 @@ TEST_DECLARE(bounding_sphere_from_points) {
     {
         const float points[] = { 0, 0, 0, 0.0f, 0.5f, 1.0f };
 
-        dx_bounding_sphere sht;
-        dx_bounding_sphere_from_points(&sht, 2, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
+        DirectX_BoundingSphere sht;
+        DirectX_BoundingSphere_FromPoints(&sht, 2, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
 
-        const dx_bounding_sphere result = { {0, 0.25f, 0.5f}, 0.559017f };
-        if (!spheres_equal(&sht, &result))
+        const DirectX_BoundingSphere result = { {0, 0.25f, 0.5f}, 0.559017f };
+        if (!SpheresEqual(&sht, &result))
         {
             TEST_LOG_FAILED("bounding_sphere_from_points - creating from points test3");
             printsh(sht);
@@ -213,11 +212,11 @@ TEST_DECLARE(bounding_sphere_from_points) {
                                  -irt3, -irt3, irt3,
                                  irt3, -irt3, irt3 };
 
-        dx_bounding_sphere sht;
-        dx_bounding_sphere_from_points(&sht, 4, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
+        DirectX_BoundingSphere sht;
+        DirectX_BoundingSphere_FromPoints(&sht, 4, (const XMFLOAT3*)(points), sizeof(XMFLOAT3));
 
-        const dx_bounding_sphere result = { { -0.0621097758f, 0.01741325f, -0.187598482f}, 1.16094756f };
-        if (!spheres_equal(&sht, &result))
+        const DirectX_BoundingSphere result = { { -0.0621097758f, 0.01741325f, -0.187598482f}, 1.16094756f };
+        if (!SpheresEqual(&sht, &result))
         {
             TEST_LOG_FAILED("bounding_sphere_from_points - creating from points test4");
             printsh(sht);
@@ -249,19 +248,19 @@ TEST_DECLARE(bounding_sphere_from_points) {
         for (size_t i = 0; i < 32; ++i)
         {
             XMVECTOR rand_vec = rand_vec16();
-            XMStoreFloat3(&points[i], &rand_vec);
+            XMStoreFloat3(&points[i], XM_1V(rand_vec));
         }
 
-        dx_bounding_sphere sht;
-        dx_bounding_sphere_from_points(&sht, 32, points, sizeof(XMFLOAT3));
+        DirectX_BoundingSphere sht;
+        DirectX_BoundingSphere_FromPoints(&sht, 32, points, sizeof(XMFLOAT3));
 
         // Expand a bit to ensure Contains works for all input points on all platforms
-        sht.r += EPSILON;
+        sht.r += COLLISION_TEST_EPSILON;
 
         for (size_t i = 0; i < 32; ++i)
         {
             XMVECTOR p = XMLoadFloat3(&points[i]);
-            dx_containment_type ct = dx_bounding_sphere_contains_point(&sht, &p);
+            DirectX_ContainmentType ct = DirectX_BoundingSphere_ContainsPoint(&sht, XM_1V(p));
             if (ct != CONTAINS)
             {
                 TEST_LOG_FAILED("bounding_sphere_from_points - Sphere-Point verification test");

@@ -1,5 +1,6 @@
 #pragma once
 
+
 #if _XM_VECTORCALL_
 #define XM_CALLCONV __vectorcall
 #elif defined(__GNUC__)
@@ -131,26 +132,49 @@ typedef __vector4 XMVECTOR;
 // Fix-up for (1st-3rd) XMVECTOR parameters that are pass-in-register for x86 and vector call; by reference otherwise
 #if ( defined(_M_IX86) || _XM_VECTORCALL_ || __i386__ ) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMVECTOR FXMVECTOR;
+#define XM_PARAM_F(p) p
+#define XM_1V(v1) v1
+#define XM_2V(v1,v2) v1,v2
+#define XM_3V(v1,v2,v3) v1,v2,v3
 #else
 typedef const XMVECTOR* FXMVECTOR;
+#define XM_PARAM_F(p) *p
+#define XM_1V(v1) &v1
+#define XM_2V(v1,v2) &v1,&v2
+#define XM_3V(v1,v2,v3) &v1,&v2,&v3
 #endif
 
 // Fix-up for (4th) XMVECTOR parameter to pass in-register for vector call; by reference otherwise
 #if (_XM_VECTORCALL_) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMVECTOR GXMVECTOR;
+#define XM_PARAM_H(p) p
+#define XM_4V(v1,v2,v3,v4) v1,v2,v3,v4
 #else
 typedef const XMVECTOR* GXMVECTOR;
+#define XM_PARAM_G(p) *p
+#define XM_4V(v1,v2,v3,v4) &v1,&v2,&v3,&v4
 #endif
 
 // Fix-up for (5th & 6th) XMVECTOR parameter to pass in-register for vector call; by reference otherwise
 #if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMVECTOR HXMVECTOR;
+#define XM_PARAM_H(p) p
+#define XM_5V(v1,v2,v3,v4,v5) v1,v2,v3,v4,v5
+#define XM_6V(v1,v2,v3,v4,v5,v6) v1,v2,v3,v4,v5,v6
 #else
 typedef const XMVECTOR* HXMVECTOR;
+#define XM_PARAM_H(p) *p
+#define XM_5V(v1,v2,v3,v4,v5) &v1,&v2,&v3,&v4,&v5
+#define XM_6V(v1,v2,v3,v4,v5,v6) &v1,&v2,&v3,&v4,&v5,&v6
 #endif
 
 // Fix-up for (7th+) XMVECTOR parameters to pass by reference
 typedef const XMVECTOR* CXMVECTOR;
+#if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
+#define XM_7V(v1,v2,v3,v4,v5,v6,v7) v1,v2,v3,v4,v5,v6,&v7
+#else
+#define XM_7V(v1,v2,v3,v4,v5,v6,v7) &v1,&v2,&v3,&v4,&v5,&v6,&v7
+#endif
 
 //------------------------------------------------------------------------------
 // Matrix type: Sixteen 32 bit floating point components aligned on a
@@ -161,12 +185,23 @@ typedef struct XMMATRIX XMMATRIX;
 // Fix-up for (1st) XMMATRIX parameter to pass in-register for vector call; by reference otherwise
 #if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMMATRIX FXMMATRIX;
+#define XM_PARAM_MATRIX(m) m
+#define XM_1M(m1) m1
+#define XM_MATRIX_GET(m, i) m.r[i]
 #else
 typedef const XMMATRIX* FXMMATRIX;
+#define XM_PARAM_MATRIX(m) *m
+#define XM_1M(m1) &m1
+#define XM_MATRIX_GET(m, i) m->r[i]
 #endif
 
 // Fix-up for (2nd+) XMMATRIX parameters to pass by reference
 typedef const XMMATRIX* CXMMATRIX;
+#if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
+#define XM_2M(m1,m2) m1,&m2
+#else
+#define XM_2M(m1,m2) &m1,&m2
+#endif
 
 #ifdef _XM_NO_INTRINSICS_
 struct XMMATRIX

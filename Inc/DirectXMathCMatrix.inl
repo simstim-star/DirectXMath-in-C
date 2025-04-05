@@ -31,10 +31,10 @@ inline bool XM_CALLCONV XMMatrixIsNaN(FXMMATRIX M)
     return (i != 0);      // i == 0 if nothing matched
 #elif defined(_XM_SSE_INTRINSICS_)
     // Load in registers
-    XMVECTOR vX = M->r[0];
-    XMVECTOR vY = M->r[1];
-    XMVECTOR vZ = M->r[2];
-    XMVECTOR vW = M->r[3];
+    XMVECTOR vX = XM_MATRIX_GET(M, 0);
+    XMVECTOR vY = XM_MATRIX_GET(M, 1);
+    XMVECTOR vZ = XM_MATRIX_GET(M, 2);
+    XMVECTOR vW = XM_MATRIX_GET(M, 3);
     // Test themselves to check for NaN
     vX = _mm_cmpneq_ps(vX, vX);
     vY = _mm_cmpneq_ps(vY, vY);
@@ -71,10 +71,10 @@ inline bool XM_CALLCONV XMMatrixIsInfinite(FXMMATRIX M)
     return (i != 0);      // i == 0 if nothing matched
 #elif defined(_XM_SSE_INTRINSICS_)
     // Mask off the sign bits
-    XMVECTOR vTemp1 = _mm_and_ps(M->r[0], g_XMAbsMask.v);
-    XMVECTOR vTemp2 = _mm_and_ps(M->r[1], g_XMAbsMask.v);
-    XMVECTOR vTemp3 = _mm_and_ps(M->r[2], g_XMAbsMask.v);
-    XMVECTOR vTemp4 = _mm_and_ps(M->r[3], g_XMAbsMask.v);
+    XMVECTOR vTemp1 = _mm_and_ps(XM_MATRIX_GET(M,0), g_XMAbsMask.v);
+    XMVECTOR vTemp2 = _mm_and_ps(XM_MATRIX_GET(M,1), g_XMAbsMask.v);
+    XMVECTOR vTemp3 = _mm_and_ps(XM_MATRIX_GET(M,2), g_XMAbsMask.v);
+    XMVECTOR vTemp4 = _mm_and_ps(XM_MATRIX_GET(M,3), g_XMAbsMask.v);
     // Compare to infinity
     vTemp1 = _mm_cmpeq_ps(vTemp1, g_XMInfinity.v);
     vTemp2 = _mm_cmpeq_ps(vTemp2, g_XMInfinity.v);
@@ -122,10 +122,10 @@ inline bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M)
     uOne |= uZero;
     return (uOne == 0);
 #elif defined(_XM_SSE_INTRINSICS_)
-    XMVECTOR vTemp1 = _mm_cmpeq_ps(M->r[0], g_XMIdentityR0.v);
-    XMVECTOR vTemp2 = _mm_cmpeq_ps(M->r[1], g_XMIdentityR1.v);
-    XMVECTOR vTemp3 = _mm_cmpeq_ps(M->r[2], g_XMIdentityR2.v);
-    XMVECTOR vTemp4 = _mm_cmpeq_ps(M->r[3], g_XMIdentityR3.v);
+    XMVECTOR vTemp1 = _mm_cmpeq_ps(XM_MATRIX_GET(M,0), g_XMIdentityR0.v);
+    XMVECTOR vTemp2 = _mm_cmpeq_ps(XM_MATRIX_GET(M,1), g_XMIdentityR1.v);
+    XMVECTOR vTemp3 = _mm_cmpeq_ps(XM_MATRIX_GET(M,2), g_XMIdentityR2.v);
+    XMVECTOR vTemp4 = _mm_cmpeq_ps(XM_MATRIX_GET(M,3), g_XMIdentityR3.v);
     vTemp1 = _mm_and_ps(vTemp1, vTemp2);
     vTemp3 = _mm_and_ps(vTemp3, vTemp4);
     vTemp1 = _mm_and_ps(vTemp1, vTemp3);
@@ -187,7 +187,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixMultiply
     // If the first row of A is [X,Y,Z,W]
     // Splat it into registers
     // Use vW to hold the original row
-    XMVECTOR vW = A->r[0];
+    XMVECTOR vW = XM_MATRIX_GET(A,0);
     XMVECTOR vX = XM_PERMUTE_PS(vW, _MM_SHUFFLE(0, 0, 0, 0)); // X X X X
     XMVECTOR vY = XM_PERMUTE_PS(vW, _MM_SHUFFLE(1, 1, 1, 1)); // Y Y Y Y
     XMVECTOR vZ = XM_PERMUTE_PS(vW, _MM_SHUFFLE(2, 2, 2, 2)); // Z Z Z Z
@@ -203,7 +203,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixMultiply
     vX = _mm_add_ps(vX, vY);
     mResult.r[0] = vX;
     // Repeat for the other 3 rows
-    vW = A->r[1];
+    vW = XM_MATRIX_GET(A,1);
     vX = XM_PERMUTE_PS(vW, _MM_SHUFFLE(0, 0, 0, 0));
     vY = XM_PERMUTE_PS(vW, _MM_SHUFFLE(1, 1, 1, 1));
     vZ = XM_PERMUTE_PS(vW, _MM_SHUFFLE(2, 2, 2, 2));
@@ -216,7 +216,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixMultiply
     vY = _mm_add_ps(vY, vW);
     vX = _mm_add_ps(vX, vY);
     mResult.r[1] = vX;
-    vW = A->r[2];
+    vW = XM_MATRIX_GET(A,2);
     vX = XM_PERMUTE_PS(vW, _MM_SHUFFLE(0, 0, 0, 0));
     vY = XM_PERMUTE_PS(vW, _MM_SHUFFLE(1, 1, 1, 1));
     vZ = XM_PERMUTE_PS(vW, _MM_SHUFFLE(2, 2, 2, 2));
@@ -229,7 +229,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixMultiply
     vY = _mm_add_ps(vY, vW);
     vX = _mm_add_ps(vX, vY);
     mResult.r[2] = vX;
-    vW = A->r[3];
+    vW = XM_MATRIX_GET(A,3);
     vX = XM_PERMUTE_PS(vW, _MM_SHUFFLE(0, 0, 0, 0));
     vY = XM_PERMUTE_PS(vW, _MM_SHUFFLE(1, 1, 1, 1));
     vZ = XM_PERMUTE_PS(vW, _MM_SHUFFLE(2, 2, 2, 2));
@@ -258,10 +258,10 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M)
     //     m30m31m32m33
 
     XMMATRIX P;
-    P.r[0] = XMVectorMergeXY(M->r[0], M->r[2]); // m00m20m01m21
-    P.r[1] = XMVectorMergeXY(M->r[1], M->r[3]); // m10m30m11m31
-    P.r[2] = XMVectorMergeZW(M->r[0], M->r[2]); // m02m22m03m23
-    P.r[3] = XMVectorMergeZW(M->r[1], M->r[3]); // m12m32m13m33
+    P.r[0] = XMVectorMergeXY(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,2)); // m00m20m01m21
+    P.r[1] = XMVectorMergeXY(XM_MATRIX_GET(M,1), XM_MATRIX_GET(M,3)); // m10m30m11m31
+    P.r[2] = XMVectorMergeZW(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,2)); // m02m22m03m23
+    P.r[3] = XMVectorMergeZW(XM_MATRIX_GET(M,1), XM_MATRIX_GET(M,3)); // m12m32m13m33
 
     XMMATRIX MT;
     MT.r[0] = XMVectorMergeXY(P.r[0], P.r[1]); // m00m10m20m30
@@ -272,13 +272,13 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M)
 
 #elif defined(_XM_SSE_INTRINSICS_)
     // x.x,x.y,y.x,y.y
-    XMVECTOR vTemp1 = _mm_shuffle_ps(M->r[0], M->r[1], _MM_SHUFFLE(1, 0, 1, 0));
+    XMVECTOR vTemp1 = _mm_shuffle_ps(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,1), _MM_SHUFFLE(1, 0, 1, 0));
     // x.z,x.w,y.z,y.w
-    XMVECTOR vTemp3 = _mm_shuffle_ps(M->r[0], M->r[1], _MM_SHUFFLE(3, 2, 3, 2));
+    XMVECTOR vTemp3 = _mm_shuffle_ps(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,1), _MM_SHUFFLE(3, 2, 3, 2));
     // z.x,z.y,w.x,w.y
-    XMVECTOR vTemp2 = _mm_shuffle_ps(M->r[2], M->r[3], _MM_SHUFFLE(1, 0, 1, 0));
+    XMVECTOR vTemp2 = _mm_shuffle_ps(XM_MATRIX_GET(M,2), XM_MATRIX_GET(M,3), _MM_SHUFFLE(1, 0, 1, 0));
     // z.z,z.w,w.z,w.w
-    XMVECTOR vTemp4 = _mm_shuffle_ps(M->r[2], M->r[3], _MM_SHUFFLE(3, 2, 3, 2));
+    XMVECTOR vTemp4 = _mm_shuffle_ps(XM_MATRIX_GET(M,2), XM_MATRIX_GET(M,3), _MM_SHUFFLE(3, 2, 3, 2));
 
     XMMATRIX mResult;
     // x.x,y.x,z.x,w.x
@@ -342,31 +342,31 @@ inline XMMATRIX XM_CALLCONV XMMatrixLookToLH
 )
 {
     XMVECTOR Zero = XMVectorZero();
-    assert(!XMVector3Equal(EyeDirection, &g_XMZero.v));
+    assert(!XMVector3Equal(EyeDirection, XM_1V(g_XMZero.v)));
     assert(!XMVector3IsInfinite(EyeDirection));
-    assert(!XMVector3Equal(UpDirection, &g_XMZero.v));
+    assert(!XMVector3Equal(UpDirection, XM_1V(g_XMZero.v)));
     assert(!XMVector3IsInfinite(UpDirection));
 
     XMVECTOR R2 = XMVector3Normalize(EyeDirection);
 
-    XMVECTOR R0 = XMVector3Cross(UpDirection, &R2);
-    R0 = XMVector3Normalize(&R0);
+    XMVECTOR R0 = XMVector3Cross(UpDirection, XM_1V(R2));
+    R0 = XMVector3Normalize(XM_1V(R0));
 
-    XMVECTOR R1 = XMVector3Cross(&R2, &R0);
+    XMVECTOR R1 = XMVector3Cross(XM_2V(R2, R0));
 
     XMVECTOR NegEyePosition = XMVectorNegate(EyePosition);
 
-    XMVECTOR D0 = XMVector3Dot(&R0, &NegEyePosition);
-    XMVECTOR D1 = XMVector3Dot(&R1, &NegEyePosition);
-    XMVECTOR D2 = XMVector3Dot(&R2, &NegEyePosition);
+    XMVECTOR D0 = XMVector3Dot(XM_2V(R0, NegEyePosition));
+    XMVECTOR D1 = XMVector3Dot(XM_2V(R1, NegEyePosition));
+    XMVECTOR D2 = XMVector3Dot(XM_2V(R2, NegEyePosition));
 
     XMMATRIX M;
-    M.r[0] = XMVectorSelect(&D0, &R0, &g_XMSelect1110.v);
-    M.r[1] = XMVectorSelect(&D1, &R1, &g_XMSelect1110.v);
-    M.r[2] = XMVectorSelect(&D2, &R2, &g_XMSelect1110.v);
+    M.r[0] = XMVectorSelect(XM_3V(D0, R0, g_XMSelect1110.v));
+    M.r[1] = XMVectorSelect(XM_3V(D1, R1, g_XMSelect1110.v));
+    M.r[2] = XMVectorSelect(XM_3V(D2, R2, g_XMSelect1110.v));
     M.r[3] = g_XMIdentityR3.v;
 
-    M = XMMatrixTranspose(&M);
+    M = XMMatrixTranspose(XM_1M(M));
 
     return M;
 }
@@ -379,7 +379,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixLookToRH
 )
 {
     XMVECTOR NegEyeDirection = XMVectorNegate(EyeDirection);
-    return XMMatrixLookToLH(EyePosition, &NegEyeDirection, UpDirection);
+    return XMMatrixLookToLH(EyePosition, XM_1V(NegEyeDirection), UpDirection);
 }
 
 inline XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovRH

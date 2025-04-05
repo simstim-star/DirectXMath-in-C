@@ -16,7 +16,7 @@ inline void TESTS_Matrix() {
     TEST(mat3_mul);
 }
 
-#define EPSILON 0.0000009
+#define MATRIX_TEST_EPSILON 0.0000009
 #define drand48()  ((float)(rand() / (RAND_MAX + 1.0)))
 
 XMFLOAT3X3 GenerateRandomMatrix();
@@ -28,11 +28,11 @@ TEST_DECLARE(mat3_is_nan) {
         ._31 = .0f, ._32 = .0f, ._33 = 1.f,
     };
     XMMATRIX NaNMatrix_XMMATRIX = XMLoadFloat3x3(&NaNMatrix);
-    TEST_ASSERT(XMMatrixIsNaN(&NaNMatrix_XMMATRIX))
+    TEST_ASSERT(XMMatrixIsNaN(XM_1M(NaNMatrix_XMMATRIX)));
 
     XMFLOAT3X3 I = XMFLOAT3X3_IDENTITY;
     XMMATRIX I_XMMATRIX = XMLoadFloat3x3(&I);
-    TEST_ASSERT(!XMMatrixIsNaN(&I_XMMATRIX))
+    TEST_ASSERT(!XMMatrixIsNaN(XM_1M(I_XMMATRIX)));
 
     TEST_SUCCESS(mat3_is_nan);
 }
@@ -44,11 +44,11 @@ TEST_DECLARE(mat3_is_inf) {
         ._31 = .0f, ._32 = .0f, ._33 = 1.f,
     };
     XMMATRIX InfMatrix_XMMATRIX = XMLoadFloat3x3(&InfMatrix);
-    TEST_ASSERT(XMMatrixIsInfinite(&InfMatrix_XMMATRIX))
+    TEST_ASSERT(XMMatrixIsInfinite(XM_1M(InfMatrix_XMMATRIX)));
 
     XMFLOAT3X3 I = XMFLOAT3X3_IDENTITY;
     XMMATRIX I_XMMATRIX = XMLoadFloat3x3(&I);
-    TEST_ASSERT(!XMMatrixIsInfinite(&I_XMMATRIX))
+    TEST_ASSERT(!XMMatrixIsInfinite(XM_1M(I_XMMATRIX)));
 
     TEST_SUCCESS(mat3_is_inf);
 }
@@ -56,7 +56,7 @@ TEST_DECLARE(mat3_is_inf) {
 TEST_DECLARE(mat3_is_identity) {
     XMFLOAT3X3 I = XMFLOAT3X3_IDENTITY;
     XMMATRIX I_XMMATRIX = XMLoadFloat3x3(&I);
-    TEST_ASSERT(XMMatrixIsIdentity(&I_XMMATRIX))
+    TEST_ASSERT(XMMatrixIsIdentity(XM_1M(I_XMMATRIX)));
 
     XMFLOAT3X3 notI = (XMFLOAT3X3){
         ._11 = 1.1f, ._12 = .0f, ._13 = .0f,
@@ -64,7 +64,7 @@ TEST_DECLARE(mat3_is_identity) {
         ._31 = .0f, ._32 = .0f, ._33 = 1.f,
     };
     XMMATRIX notI_XMMATRIX = XMLoadFloat3x3(&notI);
-    TEST_ASSERT(!XMMatrixIsIdentity(&notI_XMMATRIX))
+    TEST_ASSERT(!XMMatrixIsIdentity(XM_1M(notI_XMMATRIX)));
 
     TEST_SUCCESS(mat3_is_identity);
 }
@@ -84,12 +84,12 @@ TEST_DECLARE(mat3_mul) {
         }
         XMMATRIX A_XMMATRIX = XMLoadFloat3x3(&A);
         XMMATRIX B_XMMATRIX = XMLoadFloat3x3(&B);
-        XMMATRIX C_XMMATRIX = XMMatrixMultiply(&A_XMMATRIX, &B_XMMATRIX);
+        XMMATRIX C_XMMATRIX = XMMatrixMultiply(XM_2M(A_XMMATRIX, B_XMMATRIX));
         XMFLOAT4X4 result;
-        XMStoreFloat4x4(&result, &C_XMMATRIX);
+        XMStoreFloat4x4(&result, XM_1M(C_XMMATRIX));
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
-                TEST_ASSERT(fabsf(result.m[i][j] - C.m[i][j]) < EPSILON)
+                TEST_ASSERT(fabsf(result.m[i][j] - C.m[i][j]) < MATRIX_TEST_EPSILON)
             }
         }
     }

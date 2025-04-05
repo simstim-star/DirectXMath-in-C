@@ -30,7 +30,7 @@ inline XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource)
 #endif
 }
 
-inline XMVECTOR XMLoadInt(_In_ const uint32_t* pSource) {
+inline XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource) {
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTOR V;
@@ -118,7 +118,7 @@ inline void XM_CALLCONV XMStoreFloat
 #if defined(_XM_NO_INTRINSICS_)
     *pDestination = XMVectorGetX(V);
 #elif defined(_XM_SSE_INTRINSICS_)
-    _mm_store_ss(pDestination, *V);
+    _mm_store_ss(pDestination, XM_PARAM_F(V));
 #endif
 }
 
@@ -140,8 +140,8 @@ inline void XM_CALLCONV XMStoreFloat3
     *(int*)(&pDestination->y) = _mm_extract_ps(*V, 1);
     *(int*)(&pDestination->z) = _mm_extract_ps(*V, 2);
 #elif defined(_XM_SSE_INTRINSICS_)
-    _mm_store_sd((double*)(pDestination), _mm_castps_pd(*V));
-    __m128 z = XM_PERMUTE_PS(*V, _MM_SHUFFLE(2, 2, 2, 2));
+    _mm_store_sd((double*)(pDestination), _mm_castps_pd(XM_PARAM_F(V)));
+    __m128 z = XM_PERMUTE_PS(XM_PARAM_F(V), _MM_SHUFFLE(2, 2, 2, 2));
     _mm_store_ss(&pDestination->z, z);
 #endif
 }
@@ -176,10 +176,10 @@ inline void XM_CALLCONV XMStoreFloat4x4
     pDestination->m[3][2] = M->r[3].vector4_f32[2];
     pDestination->m[3][3] = M->r[3].vector4_f32[3];
 #elif defined(_XM_SSE_INTRINSICS_)
-    _mm_storeu_ps(&pDestination->_11, M->r[0]);
-    _mm_storeu_ps(&pDestination->_21, M->r[1]);
-    _mm_storeu_ps(&pDestination->_31, M->r[2]);
-    _mm_storeu_ps(&pDestination->_41, M->r[3]);
+    _mm_storeu_ps(&pDestination->_11, XM_MATRIX_GET(M,0));
+    _mm_storeu_ps(&pDestination->_21, XM_MATRIX_GET(M, 1));
+    _mm_storeu_ps(&pDestination->_31, XM_MATRIX_GET(M, 2));
+    _mm_storeu_ps(&pDestination->_41, XM_MATRIX_GET(M, 3));
 #endif
 }
 
@@ -214,10 +214,10 @@ inline void XM_CALLCONV XMStoreFloat4x4A
     pDestination->m[3][2] = M->r[3].vector4_f32[2];
     pDestination->m[3][3] = M->r[3].vector4_f32[3];
 #elif defined(_XM_SSE_INTRINSICS_)
-    _mm_store_ps(&pDestination->_11, M->r[0]);
-    _mm_store_ps(&pDestination->_21, M->r[1]);
-    _mm_store_ps(&pDestination->_31, M->r[2]);
-    _mm_store_ps(&pDestination->_41, M->r[3]);
+    _mm_store_ps(&pDestination->_11, XM_MATRIX_GET(M, 0));
+    _mm_store_ps(&pDestination->_21, XM_MATRIX_GET(M, 1));
+    _mm_store_ps(&pDestination->_31, XM_MATRIX_GET(M, 2));
+    _mm_store_ps(&pDestination->_41, XM_MATRIX_GET(M, 3));
 #endif
 }
 

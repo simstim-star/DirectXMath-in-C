@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.20)
 
 project(XMathC DESCRIPTION "DirectXMath SIMD C math library")
 
-
 set(XMathC_VERSION 0.0.1)
 
 set(CMAKE_C_STANDARD 11)
@@ -12,14 +11,20 @@ set(LIBRARY_HEADERS
     Inc/DirectXMathCMatrix.inl
     Inc/DirectXMathCVector.inl
     Inc/DirectXMathCMisc.inl
-    Inc/DirectXCCollision.h
-    Inc/DirectXCCollision.inl)
+    Inc/DirectXCollisionC.h
+    Inc/DirectXCollisionC.inl)
 
 option(XM_USE_TEST "Enable Tests" OFF)
 option(XM_NO_INTRINSICS "Disable intrinsics" OFF)
+option(USE_VECTORCALL "Enable __vectorcall calling convention" ON)
+
 
 if(XM_NO_INTRINSICS)
   add_compile_definitions(_XM_NO_INTRINSICS_)
+endif()
+
+if(USE_VECTORCALL)
+    add_compile_definitions(_XM_VECTORCALL_)
 endif()
 
 if(MSVC)
