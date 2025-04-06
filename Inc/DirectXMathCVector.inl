@@ -1,3 +1,4 @@
+#include "DirectXMathC.h"
 #pragma once
 
 // Initialize a vector with four floating point values
@@ -485,6 +486,23 @@ inline XMVECTOR XM_CALLCONV XMVectorLerp
     XMVECTOR L = _mm_sub_ps(XM_PARAM_F(V1), XM_PARAM_F(V0));
     XMVECTOR S = _mm_set_ps1(t);
     return XM_FMADD_PS(L, S, XM_PARAM_F(V0));
+#endif
+}
+
+
+//------------------------------------------------------------------------------
+// Return a floating point value via an index. This is not a recommended
+// function to use due to performance loss.
+inline float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i)
+{
+    assert(i < 4);
+    _Analysis_assume_(i < 4);
+#if defined(_XM_NO_INTRINSICS_)
+    return V->vector4_f32[i];
+#else
+    XMVECTORF32 U;
+    U.v = XM_PARAM_F(V);
+    return U.f[i];
 #endif
 }
 

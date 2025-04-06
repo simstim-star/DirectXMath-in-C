@@ -4,22 +4,49 @@
 #include "DirectXMathC.h"
 #include "TestCommons.h"
 
+#define MATRIX_TEST_EPSILON 0.0000009
+#define drand48()  ((float)(rand() / (RAND_MAX + 1.0)))
+
+/*******************************************
+* Tests forward declarations               *
+********************************************/
+
 TEST_DECLARE(mat3_is_nan);
 TEST_DECLARE(mat3_is_inf);
 TEST_DECLARE(mat3_is_identity);
 TEST_DECLARE(mat3_mul);
+TEST_DECLARE(alloc_4x4);
+
+
+/*******************************************
+* Utilitary functions forward declarations *
+********************************************/
+
+XMFLOAT3X3 GenerateRandomMatrix();
+
+// Write a floating point value into byte aligned memory
+void WriteFloat(float fInput, char* pOutput);
+
+// Read a floating point value from byte aligned memory
+float ReadFloat(const char* pInput);
+
+
+/*******************************************
+* Tests entry point                        *
+********************************************/
 
 inline void TESTS_Matrix() {
     TEST(mat3_is_nan);
     TEST(mat3_is_inf);
     TEST(mat3_is_identity);
     TEST(mat3_mul);
+    TEST(mat3_mul);
+    TEST(alloc_4x4);
 }
 
-#define MATRIX_TEST_EPSILON 0.0000009
-#define drand48()  ((float)(rand() / (RAND_MAX + 1.0)))
-
-XMFLOAT3X3 GenerateRandomMatrix();
+/*******************************************
+* Tests implementations                    *
+********************************************/
 
 TEST_DECLARE(mat3_is_nan) {
     XMFLOAT3X3 NaNMatrix = (XMFLOAT3X3){
@@ -96,10 +123,109 @@ TEST_DECLARE(mat3_mul) {
     TEST_SUCCESS(mat3_mul);
 }
 
+TEST_DECLARE(alloc_4x4) {
+    TEST_ASSERT(sizeof(XMFLOAT4X4) == 4 * 16);
+    const int csize = 256 + 65536;
+    char *c = _aligned_malloc(csize, 65536);
+    if (!c) { 
+        TEST_LOG_FAILED("Alloc 4x4 - malloc failed");
+        TEST_ASSERT(false);
+    }
+    const intptr_t pc64k = 65536;
+
+    const int offset = 0;
+    const int floatcount = 16;
+    for (intptr_t j = pc64k - 16; j < pc64k + 16; j++) {
+        intptr_t i;
+        for (i = 0; i < csize; i++) {
+            c[i] = (char)(~i & 0xff);
+        }
+        intptr_t first = offset + j;
+        intptr_t last = offset + j + 4 * floatcount;
+
+        for (i = 0; i < floatcount; i++) {
+            WriteFloat((float)i, (char*)&c[first + (i * 4)]);
+        }
+
+        XMMATRIX m = XMLoadFloat4x4((const XMFLOAT4X4*)&c[offset + j]);
+        for (i = 0; i < first; i++) {
+            if (c[i] != (char)(~i & 0xff)) {
+                TEST_LOG_FAILED("Alloc 4x4 - corrupted byte");
+                fprintf(stderr, "%p corrupted byte %p: %x ... %x\n", (void*)(j), (void*)(i), c[i], (unsigned char)(~i));
+                TEST_ASSERT(false);
+            }
+        }
+        for (i = last; i < csize; i++) {
+            if (c[i] != (char)(~i & 0xff)) {
+                TEST_LOG_FAILED("Alloc 4x4 - corrupted byte");
+                fprintf(stderr, "%p corrupted byte %p: %x ... %x\n", (void*)(j), (void*)(i), c[i], (unsigned char)(~i));
+                TEST_ASSERT(false);
+            }
+        }
+        for (i = 0; i < floatcount; i++) {
+            float f = ReadFloat((char*)&(c[first + (i * 4)]));
+            float check = (float)i;
+            float mf = XMVectorGetByIndex(XM_1V(m.r[i / 4]), i % 4);
+            if (f != check) {
+                TEST_LOG_FAILED("Alloc 4x4 - corrupted source float");
+                fprintf(stderr, "%p corrupted source float %p: %x ... %x\n", (void*)(j), (void*)(i), f, check);
+                TEST_ASSERT(false);
+            }
+            if (mf != check) {
+                TEST_LOG_FAILED("Alloc 4x4 - improperly read float");
+                fprintf(stderr, "%p corrupted read float %p: %x ... %x\n", (void*)(j), (void*)(i), mf, check);
+                TEST_ASSERT(false);
+            }
+        }
+    }
+    _aligned_free(c);
+    TEST_SUCCESS(alloc_4x4);
+}
+
+/**************************************
+* Utilitary functions implementations *
+***************************************/
+
 XMFLOAT3X3 GenerateRandomMatrix() {
     return (XMFLOAT3X3) {
         ._11 = drand48(), ._12 = drand48(), ._13 = drand48(),
         ._21 = drand48(), ._22 = drand48(), ._23 = drand48(),
         ._31 = drand48(), ._32 = drand48(), ._33 = drand48(),
     };
+}
+
+void WriteFloat(float fInput, char* pOutput)
+{
+    // Ensure the data is float aligned
+    union {
+        char m_cArray[4];
+        float m_fTemp;
+    } Temp;
+    // Store the float to aligned memory
+    Temp.m_fTemp = fInput;
+    // Do a "memcpy" to unaligned memory
+    // Note: This is an unavoidable Load/Hit/Store
+    pOutput[0] = Temp.m_cArray[0];
+    pOutput[1] = Temp.m_cArray[1];
+    pOutput[2] = Temp.m_cArray[2];
+    pOutput[3] = Temp.m_cArray[3];
+}
+
+float ReadFloat(const char* pInput)
+{
+    // Ensure the data is float aligned
+    union {
+        char m_cArray[4];
+        float m_fTemp;
+    } Temp;
+    // Copy the data to an aligned buffer
+    Temp.m_cArray[0] = pInput[0];
+    Temp.m_cArray[1] = pInput[1];
+    Temp.m_cArray[2] = pInput[2];
+    Temp.m_cArray[3] = pInput[3];
+    // Fetch the floating point number
+    // from float aligned memory
+
+    // Note: This is an unavoidable Load/Hit/Store
+    return Temp.m_fTemp;
 }

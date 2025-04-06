@@ -440,6 +440,8 @@ inline XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V);
 inline bool XM_CALLCONV XMVector3Greater(FXMVECTOR V1, FXMVECTOR V2);
 inline XMVECTOR XM_CALLCONV XMVectorLerp(FXMVECTOR V0, FXMVECTOR V1, float t);
 
+float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
+
 /****************************************************************************
  Matrix operations
 ****************************************************************************/
