@@ -136,9 +136,9 @@ inline void XM_CALLCONV XMStoreFloat3
     pDestination->y = V->vector4_f32[1];
     pDestination->z = V->vector4_f32[2];
 #elif defined(_XM_SSE4_INTRINSICS_)
-    * (int*)(&pDestination->x) = _mm_extract_ps(*V, 0);
-    *(int*)(&pDestination->y) = _mm_extract_ps(*V, 1);
-    *(int*)(&pDestination->z) = _mm_extract_ps(*V, 2);
+    * (int*)(&pDestination->x) = _mm_extract_ps(XM_PARAM_F(V), 0);
+    *(int*)(&pDestination->y) = _mm_extract_ps(XM_PARAM_F(V), 1);
+    *(int*)(&pDestination->z) = _mm_extract_ps(XM_PARAM_F(V), 2);
 #elif defined(_XM_SSE_INTRINSICS_)
     _mm_store_sd((double*)(pDestination), _mm_castps_pd(XM_PARAM_F(V)));
     __m128 z = XM_PERMUTE_PS(XM_PARAM_F(V), _MM_SHUFFLE(2, 2, 2, 2));
