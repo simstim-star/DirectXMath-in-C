@@ -31,3 +31,26 @@
 #define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+
+//comparisons that are equal return 0 (EXACT)
+//comparisons that are within TESTEPSILON return 1 (WITHINEPSILON)
+//comparisons that are within TEST2EPSILON return 2 (WITHIN2EPSILON)
+//...
+//comparisons that are within 100%/4096 return 5 (WITHIN4096)
+//...
+//comparisons that are within 25% return 10 (CLOSE)
+//comparisons that are beyond that, or involve a mismatched NAN or INF return WAYOFF.
+enum COMPARISON {
+    EXACT, WITHINEPSILON, WITHIN2EPSILON,
+    WITHIN10EPSILON, WITHIN100EPSILON, WITHIN4096,
+    WITHINBIGEPSILON, WITHINBIGGEREPSILON, WITHINHUGEEPSILON, WITHIN1_256,
+    WITHIN1_64, WITHIN1_16, WITHIN1_8, CLOSE, WAYOFF
+};
+
+#define TESTEPSILON  1.192092896e-7f
+#define TEST10EPSILON  1.192092896e-6f
+#define TEST100EPSILON  1.192092896e-6f
+#define TEST2EPSILON .00000023841859f
+#define TESTBIGEPSILON .001f
+#define TESTBIGGEREPSILON .0025f
+#define TESTHUGEEPSILON .01f

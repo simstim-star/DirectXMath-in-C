@@ -118,7 +118,7 @@ inline void XM_CALLCONV XMStoreFloat
 #if defined(_XM_NO_INTRINSICS_)
     *pDestination = XMVectorGetX(V);
 #elif defined(_XM_SSE_INTRINSICS_)
-    _mm_store_ss(pDestination, XM_PARAM_F(V));
+    _mm_store_ss(pDestination, XM_DEREF_F(V));
 #endif
 }
 
@@ -140,8 +140,8 @@ inline void XM_CALLCONV XMStoreFloat3
     *(int*)(&pDestination->y) = _mm_extract_ps(XM_PARAM_F(V), 1);
     *(int*)(&pDestination->z) = _mm_extract_ps(XM_PARAM_F(V), 2);
 #elif defined(_XM_SSE_INTRINSICS_)
-    _mm_store_sd((double*)(pDestination), _mm_castps_pd(XM_PARAM_F(V)));
-    __m128 z = XM_PERMUTE_PS(XM_PARAM_F(V), _MM_SHUFFLE(2, 2, 2, 2));
+    _mm_store_sd((double*)(pDestination), _mm_castps_pd(XM_DEREF_F(V)));
+    __m128 z = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(2, 2, 2, 2));
     _mm_store_ss(&pDestination->z, z);
 #endif
 }

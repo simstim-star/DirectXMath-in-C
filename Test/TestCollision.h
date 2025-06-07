@@ -248,7 +248,7 @@ TEST_DECLARE(bounding_sphere_from_points) {
         for (size_t i = 0; i < 32; ++i)
         {
             XMVECTOR rand_vec = rand_vec16();
-            XMStoreFloat3(&points[i], XM_1V(rand_vec));
+            XMStoreFloat3(&points[i], XM_REF_1V(rand_vec));
         }
 
         DirectX_BoundingSphere sht;
@@ -260,7 +260,7 @@ TEST_DECLARE(bounding_sphere_from_points) {
         for (size_t i = 0; i < 32; ++i)
         {
             XMVECTOR p = XMLoadFloat3(&points[i]);
-            DirectX_ContainmentType ct = DirectX_BoundingSphere_ContainsPoint(&sht, XM_1V(p));
+            DirectX_ContainmentType ct = DirectX_BoundingSphere_ContainsPoint(&sht, XM_REF_1V(p));
             if (ct != CONTAINS)
             {
                 TEST_LOG_FAILED("bounding_sphere_from_points - Sphere-Point verification test");

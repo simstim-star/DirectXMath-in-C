@@ -342,31 +342,31 @@ inline XMMATRIX XM_CALLCONV XMMatrixLookToLH
 )
 {
     XMVECTOR Zero = XMVectorZero();
-    assert(!XMVector3Equal(EyeDirection, XM_1V(g_XMZero.v)));
+    assert(!XMVector3Equal(EyeDirection, XM_REF_1V(g_XMZero.v)));
     assert(!XMVector3IsInfinite(EyeDirection));
-    assert(!XMVector3Equal(UpDirection, XM_1V(g_XMZero.v)));
+    assert(!XMVector3Equal(UpDirection, XM_REF_1V(g_XMZero.v)));
     assert(!XMVector3IsInfinite(UpDirection));
 
     XMVECTOR R2 = XMVector3Normalize(EyeDirection);
 
-    XMVECTOR R0 = XMVector3Cross(UpDirection, XM_1V(R2));
-    R0 = XMVector3Normalize(XM_1V(R0));
+    XMVECTOR R0 = XMVector3Cross(UpDirection, XM_REF_1V(R2));
+    R0 = XMVector3Normalize(XM_REF_1V(R0));
 
-    XMVECTOR R1 = XMVector3Cross(XM_2V(R2, R0));
+    XMVECTOR R1 = XMVector3Cross(XM_REF_2V(R2, R0));
 
     XMVECTOR NegEyePosition = XMVectorNegate(EyePosition);
 
-    XMVECTOR D0 = XMVector3Dot(XM_2V(R0, NegEyePosition));
-    XMVECTOR D1 = XMVector3Dot(XM_2V(R1, NegEyePosition));
-    XMVECTOR D2 = XMVector3Dot(XM_2V(R2, NegEyePosition));
+    XMVECTOR D0 = XMVector3Dot(XM_REF_2V(R0, NegEyePosition));
+    XMVECTOR D1 = XMVector3Dot(XM_REF_2V(R1, NegEyePosition));
+    XMVECTOR D2 = XMVector3Dot(XM_REF_2V(R2, NegEyePosition));
 
     XMMATRIX M;
-    M.r[0] = XMVectorSelect(XM_3V(D0, R0, g_XMSelect1110.v));
-    M.r[1] = XMVectorSelect(XM_3V(D1, R1, g_XMSelect1110.v));
-    M.r[2] = XMVectorSelect(XM_3V(D2, R2, g_XMSelect1110.v));
+    M.r[0] = XMVectorSelect(XM_REF_3V(D0, R0, g_XMSelect1110.v));
+    M.r[1] = XMVectorSelect(XM_REF_3V(D1, R1, g_XMSelect1110.v));
+    M.r[2] = XMVectorSelect(XM_REF_3V(D2, R2, g_XMSelect1110.v));
     M.r[3] = g_XMIdentityR3.v;
 
-    M = XMMatrixTranspose(XM_1M(M));
+    M = XMMatrixTranspose(XM_REF_1M(M));
 
     return M;
 }
@@ -379,7 +379,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixLookToRH
 )
 {
     XMVECTOR NegEyeDirection = XMVectorNegate(EyeDirection);
-    return XMMatrixLookToLH(EyePosition, XM_1V(NegEyeDirection), UpDirection);
+    return XMMatrixLookToLH(EyePosition, XM_REF_1V(NegEyeDirection), UpDirection);
 }
 
 inline XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovRH
@@ -463,4 +463,203 @@ inline XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovRH
     M.r[3] = vTemp;
     return M;
 #endif
+}
+
+#define XM3RANKDECOMPOSE(a, b, c, x, y, z)      \
+    if((x) < (y))                   \
+    {                               \
+        if((y) < (z))               \
+        {                           \
+            (a) = 2;                \
+            (b) = 1;                \
+            (c) = 0;                \
+        }                           \
+        else                        \
+        {                           \
+            (a) = 1;                \
+                                    \
+            if((x) < (z))           \
+            {                       \
+                (b) = 2;            \
+                (c) = 0;            \
+            }                       \
+            else                    \
+            {                       \
+                (b) = 0;            \
+                (c) = 2;            \
+            }                       \
+        }                           \
+    }                               \
+    else                            \
+    {                               \
+        if((x) < (z))               \
+        {                           \
+            (a) = 2;                \
+            (b) = 0;                \
+            (c) = 1;                \
+        }                           \
+        else                        \
+        {                           \
+            (a) = 0;                \
+                                    \
+            if((y) < (z))           \
+            {                       \
+                (b) = 2;            \
+                (c) = 1;            \
+            }                       \
+            else                    \
+            {                       \
+                (b) = 1;            \
+                (c) = 2;            \
+            }                       \
+        }                           \
+    }
+
+#define XM3_DECOMP_EPSILON 0.0001f
+
+_Use_decl_annotations_
+inline bool XM_CALLCONV XMMatrixDecompose
+(
+    XMVECTOR* outScale,
+    XMVECTOR* outRotQuat,
+    XMVECTOR* outTrans,
+    FXMMATRIX M
+)
+{
+    static const XMVECTOR* pvCanonicalBasis[3] = {
+        &g_XMIdentityR0.v,
+        &g_XMIdentityR1.v,
+        &g_XMIdentityR2.v
+    };
+
+    assert(outScale != NULL);
+    assert(outRotQuat != NULL);
+    assert(outTrans != NULL);
+
+    // Get the translation
+    outTrans[0] = XM_DEREF_MATRIX(M).r[3];
+
+    XMVECTOR* ppvBasis[3];
+    XMMATRIX matTemp;
+    ppvBasis[0] = &matTemp.r[0];
+    ppvBasis[1] = &matTemp.r[1];
+    ppvBasis[2] = &matTemp.r[2];
+
+    matTemp.r[0] = XM_DEREF_MATRIX(M).r[0];
+    matTemp.r[1] = XM_DEREF_MATRIX(M).r[1];
+    matTemp.r[2] = XM_DEREF_MATRIX(M).r[2];
+    matTemp.r[3] = g_XMIdentityR3.v;
+
+    float* pfScales = (float*)(outScale);
+
+    size_t a, b, c;
+    XMVECTOR len1 = XMVector3Length(XM_REF_1V(ppvBasis[0][0]));
+    XMVECTOR len2 = XMVector3Length(XM_REF_1V(ppvBasis[1][0]));
+    XMVECTOR len3 = XMVector3Length(XM_REF_1V(ppvBasis[2][0]));
+    XMVectorGetXPtr(&pfScales[0], XM_REF_1V(len1));
+    XMVectorGetXPtr(&pfScales[1], XM_REF_1V(len2));
+    XMVectorGetXPtr(&pfScales[2], XM_REF_1V(len3));
+    pfScales[3] = 0.f;
+
+    XM3RANKDECOMPOSE(a, b, c, pfScales[0], pfScales[1], pfScales[2])
+
+        if (pfScales[a] < XM3_DECOMP_EPSILON)
+        {
+            ppvBasis[a][0] = pvCanonicalBasis[a][0];
+        }
+    ppvBasis[a][0] = XMVector3Normalize(XM_REF_1V(ppvBasis[a][0]));
+
+    if (pfScales[b] < XM3_DECOMP_EPSILON)
+    {
+        size_t aa, bb, cc;
+        float fAbsX, fAbsY, fAbsZ;
+
+        fAbsX = fabsf(XMVectorGetX(XM_REF_1V(ppvBasis[a][0])));
+        fAbsY = fabsf(XMVectorGetY(XM_REF_1V(ppvBasis[a][0])));
+        fAbsZ = fabsf(XMVectorGetZ(XM_REF_1V(ppvBasis[a][0])));
+
+        XM3RANKDECOMPOSE(aa, bb, cc, fAbsX, fAbsY, fAbsZ)
+
+            ppvBasis[b][0] = XMVector3Cross(XM_REF_2V(ppvBasis[a][0], pvCanonicalBasis[cc][0]));
+    }
+
+    ppvBasis[b][0] = XMVector3Normalize(XM_REF_1V(ppvBasis[b][0]));
+
+    if (pfScales[c] < XM3_DECOMP_EPSILON)
+    {
+        ppvBasis[c][0] = XMVector3Cross(XM_REF_2V(ppvBasis[a][0], ppvBasis[b][0]));
+    }
+
+    ppvBasis[c][0] = XMVector3Normalize(XM_REF_1V(ppvBasis[c][0]));
+
+    XMVECTOR det = XMMatrixDeterminant(XM_REF_1M(matTemp));
+    float fDet = XMVectorGetX(XM_REF_1V(det));
+
+    // use Kramer's rule to check for handedness of coordinate system
+    if (fDet < 0.0f)
+    {
+        // switch coordinate system by negating the scale and inverting the basis vector on the x-axis
+        pfScales[a] = -pfScales[a];
+        ppvBasis[a][0] = XMVectorNegate(XM_REF_1V(ppvBasis[a][0]));
+
+        fDet = -fDet;
+    }
+
+    fDet -= 1.0f;
+    fDet *= fDet;
+
+    if (XM3_DECOMP_EPSILON < fDet)
+    {
+        // Non-SRT matrix encountered
+        return false;
+    }
+
+    // generate the quaternion from the matrix
+    outRotQuat[0] = XMQuaternionRotationMatrix(XM_REF_1M(matTemp));
+    return true;
+}
+
+/***************************
+ * M = 
+ *     m00, m01, m02, m03
+ *     m10, m11, m12, m13
+ *     m20, m21, m22, m23
+ *     m30, m31, m32, m33
+ ***************************/
+inline XMVECTOR XM_CALLCONV XMMatrixDeterminant(FXMMATRIX M) {
+    static const XMVECTORF32 Sign = { { { 1.0f, -1.0f, 1.0f, -1.0f } } };
+    
+    XMVECTOR V0 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), XM_SWIZZLE_Y, XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_X); // [m21, m20, m20, m20]
+    XMVECTOR V1 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), XM_SWIZZLE_Z, XM_SWIZZLE_Z, XM_SWIZZLE_Y, XM_SWIZZLE_Y); // [m32, m32, m31, m31]
+    XMVECTOR V2 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), XM_SWIZZLE_Y, XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_X); // [m21, m20, m20, m20]
+    XMVECTOR V3 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_Z); // [m33, m33, m33, m32]
+    XMVECTOR V4 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), XM_SWIZZLE_Z, XM_SWIZZLE_Z, XM_SWIZZLE_Y, XM_SWIZZLE_Y); // [m22, m22, m21, m21]
+    XMVECTOR V5 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_Z); // [m33, m33, m33, m32]
+
+
+    XMVECTOR P0 = XMVectorMultiply(XM_REF_2V(V0, V1)); // [m21 * m32, m20 * m32, m20 * m31, m20 * m31]
+    XMVECTOR P1 = XMVectorMultiply(XM_REF_2V(V2, V3)); // [m21 * m33, m20 * m33, m20 * m33, m20 * m32]
+    XMVECTOR P2 = XMVectorMultiply(XM_REF_2V(V4, V5)); // [m22 * m33, m22 * m33, m21 * m33, m21 * m32]
+
+    V0 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), XM_SWIZZLE_Z, XM_SWIZZLE_Z, XM_SWIZZLE_Y, XM_SWIZZLE_Y); // [m22, m22, m21, m21]
+    V1 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), XM_SWIZZLE_Y, XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_X); // [m31, m30, m30, m30]
+    V2 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_Z); // [m23, m23, m23, m22]
+    V3 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), XM_SWIZZLE_Y, XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_X); // [m31, m30, m30, m30]
+    V4 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_Z); // [m23, m23, m23, m22]
+    V5 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), XM_SWIZZLE_Z, XM_SWIZZLE_Z, XM_SWIZZLE_Y, XM_SWIZZLE_Y); // [m32, m32, m31, m31]
+
+    P0 = XMVectorNegativeMultiplySubtract(XM_REF_3V(V0, V1, P0));
+    P1 = XMVectorNegativeMultiplySubtract(XM_REF_3V(V2, V3, P1));
+    P2 = XMVectorNegativeMultiplySubtract(XM_REF_3V(V4, V5, P2));
+    
+    V0 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[1]), XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_W, XM_SWIZZLE_Z); // [m13, m13, m13, m12]
+    V1 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[1]), XM_SWIZZLE_Z, XM_SWIZZLE_Z, XM_SWIZZLE_Y, XM_SWIZZLE_Y); // [m12, m12, m11, m11]
+    V2 = XMVectorSwizzle(XM_REF_1V(XM_DEREF_MATRIX(M).r[1]), XM_SWIZZLE_Y, XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_X); // [m11, m10, m10, m10]
+
+    XMVECTOR S = XMVectorMultiply(XM_REF_2V(XM_DEREF_MATRIX(M).r[0], Sign.v));
+    XMVECTOR R = XMVectorMultiply(XM_REF_2V(V0, P0));
+    R = XMVectorNegativeMultiplySubtract(XM_REF_3V(V1, P1, R));
+    R = XMVectorMultiplyAdd(XM_REF_3V(V2, P2, R));
+
+    return XMVector4Dot(XM_REF_2V(S, R));
 }

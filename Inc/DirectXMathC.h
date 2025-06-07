@@ -132,48 +132,48 @@ typedef __vector4 XMVECTOR;
 // Fix-up for (1st-3rd) XMVECTOR parameters that are pass-in-register for x86 and vector call; by reference otherwise
 #if ( defined(_M_IX86) || _XM_VECTORCALL_ || __i386__ ) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMVECTOR FXMVECTOR;
-#define XM_PARAM_F(p) p
-#define XM_1V(v1) v1
-#define XM_2V(v1,v2) v1,v2
-#define XM_3V(v1,v2,v3) v1,v2,v3
+#define XM_DEREF_F(p) p
+#define XM_REF_1V(v1) v1
+#define XM_REF_2V(v1,v2) v1,v2
+#define XM_REF_3V(v1,v2,v3) v1,v2,v3
 #else
 typedef const XMVECTOR* FXMVECTOR;
-#define XM_PARAM_F(p) *p
-#define XM_1V(v1) &v1
-#define XM_2V(v1,v2) &v1,&v2
-#define XM_3V(v1,v2,v3) &v1,&v2,&v3
+#define XM_DEREF_F(p) *p
+#define XM_REF_1V(v1) &v1
+#define XM_REF_2V(v1,v2) &v1,&v2
+#define XM_REF_3V(v1,v2,v3) &v1,&v2,&v3
 #endif
 
 // Fix-up for (4th) XMVECTOR parameter to pass in-register for vector call; by reference otherwise
 #if (_XM_VECTORCALL_) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMVECTOR GXMVECTOR;
-#define XM_PARAM_H(p) p
-#define XM_4V(v1,v2,v3,v4) v1,v2,v3,v4
+#define XM_PARAM_G(p) p
+#define XM_REF_4V(v1,v2,v3,v4) v1,v2,v3,v4
 #else
 typedef const XMVECTOR* GXMVECTOR;
 #define XM_PARAM_G(p) *p
-#define XM_4V(v1,v2,v3,v4) &v1,&v2,&v3,&v4
+#define XM_REF_4V(v1,v2,v3,v4) &v1,&v2,&v3,&v4
 #endif
 
 // Fix-up for (5th & 6th) XMVECTOR parameter to pass in-register for vector call; by reference otherwise
 #if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMVECTOR HXMVECTOR;
 #define XM_PARAM_H(p) p
-#define XM_5V(v1,v2,v3,v4,v5) v1,v2,v3,v4,v5
-#define XM_6V(v1,v2,v3,v4,v5,v6) v1,v2,v3,v4,v5,v6
+#define XM_REF_5V(v1,v2,v3,v4,v5) v1,v2,v3,v4,v5
+#define XM_REF_6V(v1,v2,v3,v4,v5,v6) v1,v2,v3,v4,v5,v6
 #else
 typedef const XMVECTOR* HXMVECTOR;
 #define XM_PARAM_H(p) *p
-#define XM_5V(v1,v2,v3,v4,v5) &v1,&v2,&v3,&v4,&v5
-#define XM_6V(v1,v2,v3,v4,v5,v6) &v1,&v2,&v3,&v4,&v5,&v6
+#define XM_REF_5V(v1,v2,v3,v4,v5) &v1,&v2,&v3,&v4,&v5
+#define XM_REF_6V(v1,v2,v3,v4,v5,v6) &v1,&v2,&v3,&v4,&v5,&v6
 #endif
 
 // Fix-up for (7th+) XMVECTOR parameters to pass by reference
 typedef const XMVECTOR* CXMVECTOR;
 #if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
-#define XM_7V(v1,v2,v3,v4,v5,v6,v7) v1,v2,v3,v4,v5,v6,&v7
+#define XM_REF_7V(v1,v2,v3,v4,v5,v6,v7) v1,v2,v3,v4,v5,v6,&v7
 #else
-#define XM_7V(v1,v2,v3,v4,v5,v6,v7) &v1,&v2,&v3,&v4,&v5,&v6,&v7
+#define XM_REF_7V(v1,v2,v3,v4,v5,v6,v7) &v1,&v2,&v3,&v4,&v5,&v6,&v7
 #endif
 
 //------------------------------------------------------------------------------
@@ -185,22 +185,22 @@ typedef struct XMMATRIX XMMATRIX;
 // Fix-up for (1st) XMMATRIX parameter to pass in-register for vector call; by reference otherwise
 #if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
 typedef const XMMATRIX FXMMATRIX;
-#define XM_PARAM_MATRIX(m) m
-#define XM_1M(m1) m1
+#define XM_DEREF_MATRIX(m) m
+#define XM_REF_1M(m1) m1
 #define XM_MATRIX_GET(m, i) m.r[i]
 #else
 typedef const XMMATRIX* FXMMATRIX;
-#define XM_PARAM_MATRIX(m) *m
-#define XM_1M(m1) &m1
+#define XM_DEREF_MATRIX(m) (*m)
+#define XM_REF_1M(m1) &m1
 #define XM_MATRIX_GET(m, i) m->r[i]
 #endif
 
 // Fix-up for (2nd+) XMMATRIX parameters to pass by reference
 typedef const XMMATRIX* CXMMATRIX;
 #if ( _XM_VECTORCALL_ ) && !defined(_XM_NO_INTRINSICS_)
-#define XM_2M(m1,m2) m1,&m2
+#define XM_REF_2M(m1,m2) m1,&m2
 #else
-#define XM_2M(m1,m2) &m1,&m2
+#define XM_REF_2M(m1,m2) &m1,&m2
 #endif
 
 #ifdef _XM_NO_INTRINSICS_
@@ -417,6 +417,14 @@ inline XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource);
  3D vector operations
 ****************************************************************************/
 
+#if defined(_XM_FMA3_INTRINSICS_)
+#define XM_FMADD_PS( a, b, c ) _mm_fmadd_ps((a), (b), (c))
+#define XM_FNMADD_PS( a, b, c ) _mm_fnmadd_ps((a), (b), (c))
+#else
+#define XM_FMADD_PS( a, b, c ) _mm_add_ps(_mm_mul_ps((a), (b)), (c))
+#define XM_FNMADD_PS( a, b, c ) _mm_sub_ps((c), _mm_mul_ps((a), (b)))
+#endif
+
 bool XM_CALLCONV XMVector3Equal(FXMVECTOR V1, FXMVECTOR V2);
 bool XM_CALLCONV XMVector3IsInfinite(FXMVECTOR V);
 XMVECTOR XM_CALLCONV XMVectorZero();
@@ -440,7 +448,123 @@ inline XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V);
 inline bool XM_CALLCONV XMVector3Greater(FXMVECTOR V1, FXMVECTOR V2);
 inline XMVECTOR XM_CALLCONV XMVectorLerp(FXMVECTOR V0, FXMVECTOR V1, float t);
 
-float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
+XMVECTOR XM_CALLCONV XMVector4Length(FXMVECTOR V);
+
+inline float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
+inline float XM_CALLCONV XMVectorGetX(FXMVECTOR V);
+inline float XM_CALLCONV XMVectorGetY(FXMVECTOR V);
+inline float XM_CALLCONV XMVectorGetZ(FXMVECTOR V);
+inline float XM_CALLCONV XMVectorGetW(FXMVECTOR V);
+
+inline void XM_CALLCONV  XMVectorGetByIndexPtr(_Out_ float* f, _In_ FXMVECTOR V, _In_ size_t i);
+inline void XM_CALLCONV  XMVectorGetXPtr(_Out_ float* x, _In_ FXMVECTOR V);
+inline void XM_CALLCONV  XMVectorGetYPtr(_Out_ float* y, _In_ FXMVECTOR V);
+inline void XM_CALLCONV  XMVectorGetZPtr(_Out_ float* z, _In_ FXMVECTOR V);
+inline void XM_CALLCONV  XMVectorGetWPtr(_Out_ float* w, _In_ FXMVECTOR V);
+
+
+inline XMVECTOR XM_CALLCONV XMVectorNegativeMultiplySubtract(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
+inline XMVECTOR XM_CALLCONV XMVectorMultiplyAdd(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
+
+inline XMVECTOR XM_CALLCONV  XMVector4Dot(FXMVECTOR V1, FXMVECTOR V2);
+
+/*****************************************************************************************
+* Vector Swizzle
+******************************************************************************************/
+
+#if defined(__XNAMATH_H__) && defined(XMVectorSwizzle)
+#undef XMVectorSwizzle
+#endif
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle(FXMVECTOR V, uint32_t E0, uint32_t E1, uint32_t E2, uint32_t E3);
+
+/* Swizzle optimizations as https://stackoverflow.com/questions/32536265/how-to-convert-mm-shuffle-ps-sse-intrinsic-to-neon-intrinsic 
+ * are not as easy to do in C while maintaining the optimization: without templates, I can't generate the specializations and would need
+ * to used something like MACROS, but then I would not be able to pick the ones for the intrinsics I'm using.
+ * For example, the commented below would not work, as I would have to know if I'm using SSE, AVX, etc before choosing the function, 
+ * making it impossible to create a flexible math library. 
+ * The best approach that I can think is generating the code by hand for each combination 0000...3333 and making the ones that are
+ * optimizable have the details inside. The implementation is done below the comment.
+
+#if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0101(FXMVECTOR V) { return _mm_movelh_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_2323(FXMVECTOR V) { return _mm_movehl_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0011(FXMVECTOR V) { return _mm_unpacklo_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_2233(FXMVECTOR V) { return _mm_unpackhi_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
+#endif
+
+#if defined(_XM_SSE3_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0022(FXMVECTOR V){ return _mm_moveldup_ps(XM_PARAM_F(V)); }
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_1133(FXMVECTOR V){ return _mm_movehdup_ps(XM_PARAM_F(V)); }
+#endif
+
+#if defined(_XM_AVX2_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0000(FXMVECTOR V) { return _mm_broadcastss_ps(XM_PARAM_F(V)); }
+#endif
+
+*/
+
+// If I decide to generate a definition for each SWIZZLE one day...
+// #define UNOPTIMIZED_SWIZZLE_DEF(V,i,j,k,l) inline XMVECTOR XM_CALLCONV XMVectorSwizzle_##i##j##k##l(FXMVECTOR V) { return XMVectorSwizzle(V, i, j, k, l); }
+
+// Swizzle Optimizations (based on https://github.com/microsoft/DirectXMath/blob/af00e33a853ee87126c6d876cf728dbd06c57518/Inc/DirectXMath.h#L1911)
+// Most are on ARM Neon which I'm not supporting
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0000(FXMVECTOR V) { 
+#if defined(_XM_AVX2_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
+    return _mm_broadcastss_ps(XM_PARAM_F(V));
+#else
+    return XMVectorSwizzle(V, 0, 0, 0, 0);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0101(FXMVECTOR V) {
+#if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    return _mm_movelh_ps(XM_DEREF_F(V), XM_DEREF_F(V));
+#else
+    return XMVectorSwizzle(V, 0, 1, 0, 1);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_2323(FXMVECTOR V) {
+#if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    return _mm_movehl_ps(XM_DEREF_F(V), XM_DEREF_F(V));
+#else
+    return XMVectorSwizzle(V, 2, 3, 2, 3);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0011(FXMVECTOR V) {
+#if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    return _mm_unpacklo_ps(XM_DEREF_F(V), XM_DEREF_F(V));
+#else
+    return XMVectorSwizzle(V, 0, 0, 1, 1);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_2233(FXMVECTOR V) {
+#if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    return _mm_unpackhi_ps(XM_DEREF_F(V), XM_DEREF_F(V));
+#else
+    return XMVectorSwizzle(V, 2, 2, 3, 3);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0022(FXMVECTOR V) {
+#if defined(_XM_SSE3_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    return _mm_moveldup_ps(XM_PARAM_F(V));
+#else
+    return XMVectorSwizzle(V, 0, 0, 2, 2);
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorSwizzle_1133(FXMVECTOR V) {
+#if defined(_XM_SSE3_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    return _mm_movehdup_ps(XM_PARAM_F(V));
+#else
+    return XMVectorSwizzle(V, 1, 1, 3, 3);
+#endif
+}
 
 /****************************************************************************
  Matrix operations
@@ -452,7 +576,18 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M);
 inline XMMATRIX XM_CALLCONV XMMatrixTranslation(float OffsetX, float OffsetY, float OffsetZ);
 inline XMMATRIX XM_CALLCONV XMMatrixLookToLH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
 inline XMMATRIX XM_CALLCONV XMMatrixLookToRH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
+inline XMVECTOR XM_CALLCONV XMMatrixDeterminant(FXMMATRIX M);
 
+_Success_(return)
+inline bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XMVECTOR * outRotQuat, _Out_ XMVECTOR * outTrans, _In_ FXMMATRIX M);
+
+/****************************************************************************
+*
+* Quaternion operations
+*
+****************************************************************************/
+
+XMVECTOR    XM_CALLCONV     XMQuaternionRotationMatrix(FXMMATRIX M);
 
 /****************************************************************************
  Globals
