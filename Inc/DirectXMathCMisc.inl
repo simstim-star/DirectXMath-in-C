@@ -206,3 +206,52 @@ inline XMVECTOR XM_CALLCONV XMQuaternionRotationMatrix(FXMMATRIX M)
     return _mm_div_ps(t2, t0);
 #endif
 }
+
+inline XMVECTOR XM_CALLCONV XMPlaneNormalize(FXMVECTOR P)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    float fLengthSq = sqrtf((P->vector4_f32[0] * P->vector4_f32[0]) + (P->vector4_f32[1] * P->vector4_f32[1]) + (P->vector4_f32[2] * P->vector4_f32[2]));
+    // Prevent divide by zero
+    if (fLengthSq > 0)
+    {
+        fLengthSq = 1.0f / fLengthSq;
+    }
+    XMVECTORF32 vResult = { { {
+            P->vector4_f32[0] * fLengthSq,
+            P->vector4_f32[1] * fLengthSq,
+            P->vector4_f32[2] * fLengthSq,
+            P->vector4_f32[3] * fLengthSq
+        } } };
+    return vResult.v;
+#elif defined(_XM_SSE4_INTRINSICS_)
+    XMVECTOR vLengthSq = _mm_dp_ps(XM_DEREF_F(P), XM_DEREF_F(P), 0x7f);
+    // Prepare for the division
+    XMVECTOR vResult = _mm_sqrt_ps(vLengthSq);
+    // Failsafe on zero (Or epsilon) length planes
+    // If the length is infinity, set the elements to zero
+    vLengthSq = _mm_cmpneq_ps(vLengthSq, g_XMInfinity.v);
+    // Reciprocal mul to perform the normalization
+    vResult = _mm_div_ps(XM_DEREF_F(P), vResult);
+    // Any that are infinity, set to zero
+    vResult = _mm_and_ps(vResult, vLengthSq);
+    return vResult;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Perform the dot product on x,y and z only
+    XMVECTOR vLengthSq = _mm_mul_ps(XM_DEREF_F(P), XM_DEREF_F(P));
+    XMVECTOR vTemp = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(2, 1, 2, 1));
+    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
+    vTemp = XM_PERMUTE_PS(vTemp, _MM_SHUFFLE(1, 1, 1, 1));
+    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
+    vLengthSq = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(0, 0, 0, 0));
+    // Prepare for the division
+    XMVECTOR vResult = _mm_sqrt_ps(vLengthSq);
+    // Failsafe on zero (Or epsilon) length planes
+    // If the length is infinity, set the elements to zero
+    vLengthSq = _mm_cmpneq_ps(vLengthSq, g_XMInfinity.v);
+    // Reciprocal mul to perform the normalization
+    vResult = _mm_div_ps(XM_DEREF_F(P), vResult);
+    // Any that are infinity, set to zero
+    vResult = _mm_and_ps(vResult, vLengthSq);
+    return vResult;
+#endif
+}
