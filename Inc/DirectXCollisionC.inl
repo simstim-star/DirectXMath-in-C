@@ -27,7 +27,7 @@ XMGLOBALCONST XMVECTORF32 g_FltMax = { { { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX } 
 #endif
 
 _Use_decl_annotations_
-inline DirectX_ContainmentType XM_CALLCONV DirectX_BoundingSphere_ContainsPoint(const DirectX_BoundingSphere *const s, const FXMVECTOR p)
+inline XMContainmentType XM_CALLCONV XMBoundingSphereContainsPoint(const XMBoundingSphere *const s, const FXMVECTOR p)
 {
     XMVECTOR center = XMLoadFloat3(&s->center);
     XMVECTOR r = XMVectorReplicatePtr(&s->r);
@@ -39,8 +39,10 @@ inline DirectX_ContainmentType XM_CALLCONV DirectX_BoundingSphere_ContainsPoint(
     return XMVector3LessOrEqual(XM_REF_2V(dist_sqr, r_sqr)) ? CONTAINS : DISJOINT;
 }
 
+#define XM_BOUNDING_SPHERE_CONTAINS_POINT(SPHERE, P) XMBoundingSphereContainsPoint(SPHERE, XM_REF_1V(P))
+
 _Use_decl_annotations_
-inline void DirectX_BoundingSphere_Merged(_Out_ DirectX_BoundingSphere *out, _In_ const DirectX_BoundingSphere *s1, _In_ const DirectX_BoundingSphere *s2)
+inline void XMBoundingSphereMerged(_Out_ XMBoundingSphere *out, _In_ const XMBoundingSphere *s1, _In_ const XMBoundingSphere *s2)
 {
     XMVECTOR c1 = XMLoadFloat3(&s1->center);
     float r1 = s1->r;
@@ -94,7 +96,7 @@ inline void DirectX_BoundingSphere_Merged(_Out_ DirectX_BoundingSphere *out, _In
 // Graphics Gems.
 //-----------------------------------------------------------------------------
 _Use_decl_annotations_
-inline void DirectX_BoundingSphere_FromPoints(DirectX_BoundingSphere* out, size_t count, const XMFLOAT3* points, size_t stride)
+inline void XMBoundingSphereFromPoints(XMBoundingSphere* out, size_t count, const XMFLOAT3* points, size_t stride)
 {
     assert(count > 0);
     assert(points);

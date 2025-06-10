@@ -404,14 +404,17 @@ typedef XM_ALIGNED_STRUCT(16) XMVECTORU32
  Load operations
 ****************************************************************************/
 
-inline XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource);
-inline XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource);
-inline XMVECTOR XM_CALLCONV XMLoadFloat(_In_ const float* pSource);
-inline XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource);
-inline void XM_CALLCONV XMStoreFloat4x4(XMFLOAT4X4* pDestination, FXMMATRIX M);
-inline void XM_CALLCONV XMStoreFloat4x4A(XMFLOAT4X4A* pDestination, FXMMATRIX M);
-inline XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource);
-inline XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource);
+XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource);
+XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource);
+XMVECTOR XM_CALLCONV XMLoadFloat(_In_ const float* pSource);
+XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource);
+
+void XM_CALLCONV XMStoreFloat4x4(XMFLOAT4X4* pDestination, FXMMATRIX M);
+#define XM_STORE_FLOAT4X4(DEST, M) XMStoreFloat4x4(DEST, XM_REF_1M(M))
+
+void XM_CALLCONV XMStoreFloat4x4A(XMFLOAT4X4A* pDestination, FXMMATRIX M);
+XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource);
+XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource);
 
 /****************************************************************************
  3D vector operations
@@ -426,47 +429,101 @@ inline XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource);
 #endif
 
 bool XM_CALLCONV XMVector3Equal(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC3_EQ(V1, V2) XMVector3Equal(XM_REF_2V(V1,V2))
+
 bool XM_CALLCONV XMVector3IsInfinite(FXMVECTOR V);
+#define XM_VEC3_IS_INF(V) XMVector3IsInfinite(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVectorZero();
 XMVECTOR XM_CALLCONV XMVectorSet(float x, float y, float z, float w);
+
 float XM_CALLCONV XMVectorGetX(FXMVECTOR V);
+#define XM_VECX(V) XMVectorGetX(XM_REF_1V(V))
+
 float XM_CALLCONV XMVectorGetY(FXMVECTOR V);
+#define XM_VECY(V) XMVectorGetY(XM_REF_1V(V))
+
 float XM_CALLCONV XMVectorGetZ(FXMVECTOR V);
+#define XM_VECZ(V) XMVectorGetZ(XM_REF_1V(V))
+
+float XM_CALLCONV XMVectorGetW(FXMVECTOR V);
+#define XM_VECW(V) XMVectorGetW(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVectorMultiply(FXMVECTOR V1, FXMVECTOR V2);
-inline XMVECTOR XM_CALLCONV XMVectorDivide(FXMVECTOR V1, FXMVECTOR V2);
-inline XMVECTOR XM_CALLCONV XMVectorReplicate(float Value);
+#define XM_VEC_MULT(V1,V2) XMVectorMultiply(XM_REF_2V(V1,V2))
+
+XMVECTOR XM_CALLCONV XMVectorDivide(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_DIV(V1,V2) XMVectorDivide(XM_REF_2V(V1,V2))
+
+XMVECTOR XM_CALLCONV XMVectorReplicate(float Value);
+
 XMVECTOR XM_CALLCONV XMVector3Normalize(FXMVECTOR V);
+#define XM_VEC3_NORM(V) XMVector3Normalize(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVector3NormalizeEst(FXMVECTOR V);
+#define XM_VEC3_NORM_EST(V) XMVector3NormalizeEst(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVectorNegate(FXMVECTOR V);
+#define XM_VEC_NEG(V) XMVectorNegate(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVector3Cross(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC3_CROSS(V1,V2) XMVector3Cross(XM_REF_2V(V1,V2))
+
 XMVECTOR XM_CALLCONV XMVector3Dot(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC3_DOT(V1,V2) XMVector3Dot(XM_REF_2V(V1,V2))
+
 XMVECTOR XM_CALLCONV XMVectorSelect(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR Control);
-inline XMVECTOR XM_CALLCONV XMVectorSubtract(FXMVECTOR V1, FXMVECTOR V2);
-inline XMVECTOR XM_CALLCONV XMVector3LengthSq(FXMVECTOR V);
-inline XMVECTOR XM_CALLCONV XMVectorSqrt(FXMVECTOR V);
-inline XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V);
-inline bool XM_CALLCONV XMVector3Greater(FXMVECTOR V1, FXMVECTOR V2);
-inline XMVECTOR XM_CALLCONV XMVectorLerp(FXMVECTOR V0, FXMVECTOR V1, float t);
+#define XM_VEC_SELECT(V1,V2,CONTROL) XMVectorSelect(XM_REF_3V(V1,V2,CONTROL))
+
+XMVECTOR XM_CALLCONV XMVectorSubtract(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_SUBTRACT(V1,V2) XMVectorSubtract(XM_REF_2V(V1,V2))
+
+XMVECTOR XM_CALLCONV XMVector3LengthSq(FXMVECTOR V);
+#define XM_VEC3_LEN_SQ(V) XMVector3LengthSq(XM_REF_1V(V))
+
+XMVECTOR XM_CALLCONV XMVectorSqrt(FXMVECTOR V);
+#define XM_VEC3_SQRT(V) XMVectorSqrt(XM_REF_1V(V))
+
+XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V);
+#define XM_VEC3_LEN(V)  XMVector3Length(XM_REF_1V(V))
+
+bool XM_CALLCONV XMVector3Greater(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC3_GREATER(V1,V2) XMVector3Greater(XM_REF_2V(V1,V2))
+
+XMVECTOR XM_CALLCONV XMVectorLerp(FXMVECTOR V1, FXMVECTOR V2, float t);
+#define XM_VEC_LERP(V1, V2, t) XMVectorLerp(XM_REF_2V(V1,V2), t)
 
 XMVECTOR XM_CALLCONV XMVector4Length(FXMVECTOR V);
+#define XM_VEC4_LEN(V) XMVector4Length(XM_REF_1V(V))
 
-inline float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
-inline float XM_CALLCONV XMVectorGetX(FXMVECTOR V);
-inline float XM_CALLCONV XMVectorGetY(FXMVECTOR V);
-inline float XM_CALLCONV XMVectorGetZ(FXMVECTOR V);
-inline float XM_CALLCONV XMVectorGetW(FXMVECTOR V);
+float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
+#define XM_VEC_IDX(V, IDX) XMVectorGetByIndex(XM_REF_1V(V), IDX)
 
-inline void XM_CALLCONV  XMVectorGetByIndexPtr(_Out_ float* f, _In_ FXMVECTOR V, _In_ size_t i);
-inline void XM_CALLCONV  XMVectorGetXPtr(_Out_ float* x, _In_ FXMVECTOR V);
-inline void XM_CALLCONV  XMVectorGetYPtr(_Out_ float* y, _In_ FXMVECTOR V);
-inline void XM_CALLCONV  XMVectorGetZPtr(_Out_ float* z, _In_ FXMVECTOR V);
-inline void XM_CALLCONV  XMVectorGetWPtr(_Out_ float* w, _In_ FXMVECTOR V);
+void XM_CALLCONV  XMVectorGetByIndexPtr(_Out_ float* f, _In_ FXMVECTOR V, _In_ size_t i);
+#define XM_VEC_IDX_PTR(RECEIVING_PTR, V, IDX) XMVectorGetByIndexPtr(RECEIVING_PTR, XM_REF_1V(V), IDX)
 
+void XM_CALLCONV  XMVectorGetXPtr(_Out_ float* x, _In_ FXMVECTOR V);
+#define XM_VECX_PTR(RECEIVING_PTR, V) XMVectorGetXPtr(RECEIVING_PTR, XM_REF_1V(V))
 
-inline XMVECTOR XM_CALLCONV XMVectorNegativeMultiplySubtract(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
-inline XMVECTOR XM_CALLCONV XMVectorMultiplyAdd(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
+void XM_CALLCONV  XMVectorGetYPtr(_Out_ float* y, _In_ FXMVECTOR V);
+#define XM_VECY_PTR(RECEIVING_PTR, V) XMVectorGetYPtr(RECEIVING_PTR, XM_REF_1V(V))
 
-inline XMVECTOR XM_CALLCONV  XMVector4Dot(FXMVECTOR V1, FXMVECTOR V2);
+void XM_CALLCONV  XMVectorGetZPtr(_Out_ float* z, _In_ FXMVECTOR V);
+#define XM_VECZ_PTR(RECEIVING_PTR, V) XMVectorGetYPtr(RECEIVING_PTR, XM_REF_1V(V))
+
+void XM_CALLCONV  XMVectorGetWPtr(_Out_ float* w, _In_ FXMVECTOR V);
+#define XM_VECW_PTR(RECEIVING_PTR, V) XMVectorGetYPtr(RECEIVING_PTR, XM_REF_1V(V))
+
+XMVECTOR XM_CALLCONV XMVectorNegativeMultiplySubtract(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
+#define XM_VEC_NEGATIVE_MULT_SUBTRACT(V1,V2,V3) XMVectorNegativeMultiplySubtract(XM_REF_3V(V1,V2,V3))
+
+XMVECTOR XM_CALLCONV XMVectorMultiplyAdd(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
+#define XM_VEC_MULT_ADD(V1,V2,V3) XMVectorMultiplyAdd(XM_REF_3V(V1,V2,V3))
+
+XMVECTOR XM_CALLCONV  XMVector4Dot(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC4_DOT(V1,V2) XMVector4Dot(XM_REF_2V(V1,V2))
+
+XMVECTOR XM_CALLCONV XMVectorReplicatePtr(const float* pValue);
 
 /*****************************************************************************************
 * Vector Swizzle
@@ -476,43 +533,19 @@ inline XMVECTOR XM_CALLCONV  XMVector4Dot(FXMVECTOR V1, FXMVECTOR V2);
 #undef XMVectorSwizzle
 #endif
 
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle(FXMVECTOR V, uint32_t E0, uint32_t E1, uint32_t E2, uint32_t E3);
+XMVECTOR XM_CALLCONV XMVectorSwizzle(FXMVECTOR V, uint32_t E0, uint32_t E1, uint32_t E2, uint32_t E3);
+#define XM_VEC_SWIZZLE(V,E0,E1,E2,E3) XMVectorSwizzle(XM_REF_1V(V), E0,E1,E2,E3)
 
 /* Swizzle optimizations as https://stackoverflow.com/questions/32536265/how-to-convert-mm-shuffle-ps-sse-intrinsic-to-neon-intrinsic 
- * are not as easy to do in C while maintaining the optimization: without templates, I can't generate the specializations and would need
- * to used something like MACROS, but then I would not be able to pick the ones for the intrinsics I'm using.
- * For example, the commented below would not work, as I would have to know if I'm using SSE, AVX, etc before choosing the function, 
- * making it impossible to create a flexible math library. 
- * The best approach that I can think is generating the code by hand for each combination 0000...3333 and making the ones that are
- * optimizable have the details inside. The implementation is done below the comment.
-
-#if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0101(FXMVECTOR V) { return _mm_movelh_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_2323(FXMVECTOR V) { return _mm_movehl_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0011(FXMVECTOR V) { return _mm_unpacklo_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_2233(FXMVECTOR V) { return _mm_unpackhi_ps(XM_PARAM_F(V), XM_PARAM_F(V)); }
-#endif
-
-#if defined(_XM_SSE3_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0022(FXMVECTOR V){ return _mm_moveldup_ps(XM_PARAM_F(V)); }
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_1133(FXMVECTOR V){ return _mm_movehdup_ps(XM_PARAM_F(V)); }
-#endif
-
-#if defined(_XM_AVX2_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
-inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0000(FXMVECTOR V) { return _mm_broadcastss_ps(XM_PARAM_F(V)); }
-#endif
-
-*/
-
-// If I decide to generate a definition for each SWIZZLE one day...
-// #define UNOPTIMIZED_SWIZZLE_DEF(V,i,j,k,l) inline XMVECTOR XM_CALLCONV XMVectorSwizzle_##i##j##k##l(FXMVECTOR V) { return XMVectorSwizzle(V, i, j, k, l); }
+ * are not as easy to do in C while maintaining the optimization: without templates, I can't generate the specializations easily
+ */
 
 // Swizzle Optimizations (based on https://github.com/microsoft/DirectXMath/blob/af00e33a853ee87126c6d876cf728dbd06c57518/Inc/DirectXMath.h#L1911)
 // Most are on ARM Neon which I'm not supporting
 
 inline XMVECTOR XM_CALLCONV XMVectorSwizzle_0000(FXMVECTOR V) { 
 #if defined(_XM_AVX2_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
-    return _mm_broadcastss_ps(XM_PARAM_F(V));
+    return _mm_broadcastss_ps(XM_DEREF_F(V));
 #else
     return XMVectorSwizzle(V, 0, 0, 0, 0);
 #endif
@@ -571,21 +604,42 @@ inline XMVECTOR XM_CALLCONV XMVectorSwizzle_1133(FXMVECTOR V) {
 ****************************************************************************/
 
 XMVECTOR XM_CALLCONV XMPlaneNormalize(FXMVECTOR P);
+#define XM_PLANE_NORM(P) XMPlaneNormalize(XM_REF_1V(P))
 
 /****************************************************************************
  Matrix operations
 ****************************************************************************/
 
-inline bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M);
-inline XMMATRIX XM_CALLCONV XMMatrixMultiply(FXMMATRIX M1, CXMMATRIX M2);
-inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M);
-inline XMMATRIX XM_CALLCONV XMMatrixTranslation(float OffsetX, float OffsetY, float OffsetZ);
-inline XMMATRIX XM_CALLCONV XMMatrixLookToLH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
-inline XMMATRIX XM_CALLCONV XMMatrixLookToRH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
-inline XMVECTOR XM_CALLCONV XMMatrixDeterminant(FXMMATRIX M);
+bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M);
+#define XM_MAT_IS_ID(M) XMMatrixIsIdentity(XM_REF_1M(M))
+
+bool XM_CALLCONV XMMatrixIsNaN(FXMMATRIX M);
+#define XM_MAT_IS_NAN(M) XMMatrixIsNaN(XM_REF_1M(M))
+
+bool XM_CALLCONV XMMatrixIsInfinite(FXMMATRIX M);
+#define XM_MAT_IS_INF(M) XMMatrixIsInfinite(XM_REF_1M(M))
+
+XMMATRIX XM_CALLCONV XMMatrixMultiply(FXMMATRIX M1, CXMMATRIX M2);
+#define XM_MAT_MULT(M1, M2) XMMatrixMultiply(XM_REF_2M(M1,M2))
+
+XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M);
+#define XM_MAT_TRANSP(M) XMMatrixTranspose(XM_REF_1M(M))
+
+XMMATRIX XM_CALLCONV XMMatrixTranslation(float OffsetX, float OffsetY, float OffsetZ);
+#define XM_MAT_TRANSLATION(OFFSETX, OFFSETY, OFFSETZ) XMMatrixTranslation(OFFSETX, OFFSETY, OFFSETZ)
+
+XMMATRIX XM_CALLCONV XMMatrixLookToLH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
+#define XM_MAT_LOOK_LH(EYEPOS, EYEDIR, UPDIR) XMMatrixLookToLH(XM_REF_3V(EYEPOS, EYEDIR, UPDIR))
+
+XMMATRIX XM_CALLCONV XMMatrixLookToRH(FXMVECTOR EyePosition, FXMVECTOR EyeDirection, FXMVECTOR UpDirection);
+#define XM_MAT_LOOK_RH(EYEPOS, EYEDIR, UPDIR) XMMatrixLookToRH(XM_REF_3V(EYEPOS, EYEDIR, UPDIR))
+
+XMVECTOR XM_CALLCONV XMMatrixDeterminant(FXMMATRIX M);
+#define XM_DETERMINANT(M) XMMatrixDeterminant(XM_REF_1M(M))
 
 _Success_(return)
-inline bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XMVECTOR * outRotQuat, _Out_ XMVECTOR * outTrans, _In_ FXMMATRIX M);
+bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XMVECTOR * outRotQuat, _Out_ XMVECTOR * outTrans, _In_ FXMMATRIX M);
+#define XM_MAT_DECOMP(OUT_SCALE, OUT_ROT_QUAT, OUT_TRANS, M) XMMatrixDecompose(OUT_SCALE, OUT_ROT_QUAT, OUT_TRANS, XM_REF_1M(M))
 
 /****************************************************************************
 *
@@ -593,7 +647,8 @@ inline bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XMVEC
 *
 ****************************************************************************/
 
-XMVECTOR    XM_CALLCONV     XMQuaternionRotationMatrix(FXMMATRIX M);
+XMVECTOR XM_CALLCONV XMQuaternionRotationMatrix(FXMMATRIX M);
+#define XM_QUAT_ROT_MAT(M) XMQuaternionRotationMatrix(XM_REF_1M(M))
 
 /****************************************************************************
  Globals
@@ -697,7 +752,6 @@ XMGLOBALCONST XMVECTORF32 g_XMOne = { { 1.0f, 1.0f, 1.0f, 1.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMOne3 = { { 1.0f, 1.0f, 1.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMZero = { { 0.0f, 0.0f, 0.0f, 0.0f } };
 
-
 #define XMFLOAT4X4_ZERO (XMFLOAT4X4) {                  \
         ._11 = 0.f, ._12 = 0.f, ._13 = 0.f, ._14 = 0.f, \
         ._21 = 0.f, ._22 = 0.f, ._23 = 0.f, ._24 = 0.f, \
@@ -715,13 +769,12 @@ XMGLOBALCONST XMVECTORF32 g_XMZero = { { 0.0f, 0.0f, 0.0f, 0.0f } };
  Miscellaneous operations
 ****************************************************************************/
 
-inline bool XMScalarNearEqual(float S1,	float S2, float Epsilon);
-inline void XMScalarSinCos(float* pSin,float* pCos,float  Value);
+bool XMScalarNearEqual(float S1, float S2, float Epsilon);
+void XMScalarSinCos(float* pSin,float* pCos,float Value);
 
 /****************************************************************************
  Add inline implementations
 ****************************************************************************/
-
 
 #include "DirectXMathCMatrix.inl"
 #include "DirectXMathCConvert.inl"
