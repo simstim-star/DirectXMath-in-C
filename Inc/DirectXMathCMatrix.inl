@@ -885,3 +885,50 @@ inline XMVECTOR XM_CALLCONV XMMatrixDeterminant(FXMMATRIX M) {
 
     return XM_VEC4_DOT(S, R);
 }
+
+
+inline XMMATRIX XMMatrixScale(FXMMATRIX M, float S)
+{
+    XMMATRIX mResult;
+    mResult.r[0] = XMVectorScale(XM_REF_1V(XM_DEREF_MATRIX(M).r[0]), S);
+    mResult.r[1] = XMVectorScale(XM_REF_1V(XM_DEREF_MATRIX(M).r[1]), S);
+    mResult.r[2] = XMVectorScale(XM_REF_1V(XM_DEREF_MATRIX(M).r[2]), S);
+    mResult.r[3] = XMVectorScale(XM_REF_1V(XM_DEREF_MATRIX(M).r[3]), S);
+    return mResult;
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixTranslationFromVector(FXMVECTOR Offset)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMMATRIX M;
+    M.m[0][0] = 1.0f;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = 1.0f;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = 1.0f;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = Offset->vector4_f32[0];
+    M.m[3][1] = Offset->vector4_f32[1];
+    M.m[3][2] = Offset->vector4_f32[2];
+    M.m[3][3] = 1.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMMATRIX M;
+    M.r[0] = g_XMIdentityR0.v;
+    M.r[1] = g_XMIdentityR1.v;
+    M.r[2] = g_XMIdentityR2.v;
+    M.r[3] = XMVectorSelect(XM_REF_1V(g_XMIdentityR3.v), Offset, XM_REF_1V(g_XMSelect1110.v));
+    return M;
+#endif
+}

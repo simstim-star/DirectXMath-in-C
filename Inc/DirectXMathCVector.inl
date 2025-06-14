@@ -176,6 +176,107 @@ inline XMVECTOR XM_CALLCONV XMVectorZero()
 #endif
 }
 
+// Sets the X component of a vector to a passed floating point value
+inline XMVECTOR XM_CALLCONV XMVectorSetX(FXMVECTOR V, float x)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 U = { { {
+            x,
+            V->vector4_f32[1],
+            V->vector4_f32[2],
+            V->vector4_f32[3]
+        } } };
+    return U.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR vResult = _mm_set_ss(x);
+    vResult = _mm_move_ss(XM_DEREF_F(V), vResult);
+    return vResult;
+#endif
+}
+
+// Sets the Y component of a vector to a passed floating point value
+inline XMVECTOR XM_CALLCONV XMVectorSetY(FXMVECTOR V, float y)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 U = { { {
+            V->vector4_f32[0],
+            y,
+            V->vector4_f32[2],
+            V->vector4_f32[3]
+        } } };
+    return U.v;
+#elif defined(_XM_SSE4_INTRINSICS_)
+    XMVECTOR vResult = _mm_set_ss(y);
+    vResult = _mm_insert_ps(XM_DEREF_F(V), vResult, 0x10);
+    return vResult;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Swap y and x
+    XMVECTOR vResult = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(3, 2, 0, 1));
+    // Convert input to vector
+    XMVECTOR vTemp = _mm_set_ss(y);
+    // Replace the x component
+    vResult = _mm_move_ss(vResult, vTemp);
+    // Swap y and x again
+    vResult = XM_PERMUTE_PS(vResult, _MM_SHUFFLE(3, 2, 0, 1));
+    return vResult;
+#endif
+}
+// Sets the Z component of a vector to a passed floating point value
+inline XMVECTOR XM_CALLCONV XMVectorSetZ(FXMVECTOR V, float z)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 U = { { {
+            V->vector4_f32[0],
+            V->vector4_f32[1],
+            z,
+            V->vector4_f32[3]
+        } } };
+    return U.v;
+#elif defined(_XM_SSE4_INTRINSICS_)
+    XMVECTOR vResult = _mm_set_ss(z);
+    vResult = _mm_insert_ps(XM_DEREF_F(V), vResult, 0x20);
+    return vResult;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Swap z and x
+    XMVECTOR vResult = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(3, 0, 1, 2));
+    // Convert input to vector
+    XMVECTOR vTemp = _mm_set_ss(z);
+    // Replace the x component
+    vResult = _mm_move_ss(vResult, vTemp);
+    // Swap z and x again
+    vResult = XM_PERMUTE_PS(vResult, _MM_SHUFFLE(3, 0, 1, 2));
+    return vResult;
+#endif
+}
+
+// Sets the W component of a vector to a passed floating point value
+inline XMVECTOR XM_CALLCONV XMVectorSetW(FXMVECTOR V, float w)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 U = { { {
+            V->vector4_f32[0],
+            V->vector4_f32[1],
+            V->vector4_f32[2],
+            w
+        } } };
+    return U.v;
+#elif defined(_XM_SSE4_INTRINSICS_)
+    XMVECTOR vResult = _mm_set_ss(w);
+    vResult = _mm_insert_ps(XM_DEREF_F(V), vResult, 0x30);
+    return vResult;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Swap w and x
+    XMVECTOR vResult = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(0, 2, 1, 3));
+    // Convert input to vector
+    XMVECTOR vTemp = _mm_set_ss(w);
+    // Replace the x component
+    vResult = _mm_move_ss(vResult, vTemp);
+    // Swap w and x again
+    vResult = XM_PERMUTE_PS(vResult, _MM_SHUFFLE(0, 2, 1, 3));
+    return vResult;
+#endif
+}
+
 //------------------------------------------------------------------------------
 // Replicate the x component of the vector
 inline XMVECTOR XM_CALLCONV XMVectorSplatX(FXMVECTOR V)
@@ -245,6 +346,26 @@ inline XMVECTOR XM_CALLCONV XMVectorSplatW(FXMVECTOR V)
     return vdupq_lane_f32(vget_high_f32(XM_DEREF_F(V)), 1);
 #elif defined(_XM_SSE_INTRINSICS_)
     return XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(3, 3, 3, 3));
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorScale
+(
+    FXMVECTOR V,
+    float    ScaleFactor
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            V->vector4_f32[0] * ScaleFactor,
+            V->vector4_f32[1] * ScaleFactor,
+            V->vector4_f32[2] * ScaleFactor,
+            V->vector4_f32[3] * ScaleFactor
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR vResult = _mm_set_ps1(ScaleFactor);
+    return _mm_mul_ps(vResult, XM_DEREF_F(V));
 #endif
 }
 
@@ -661,26 +782,6 @@ inline float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i)
     XMVECTORF32 U;
     U.v = XM_DEREF_F(V);
     return U.f[i];
-#endif
-}
-
-inline XMVECTOR XM_CALLCONV XMVectorScale
-(
-    FXMVECTOR V,
-    float    ScaleFactor
-)
-{
-#if defined(_XM_NO_INTRINSICS_)
-    XMVECTORF32 Result = { { {
-            V->vector4_f32[0] * ScaleFactor,
-            V->vector4_f32[1] * ScaleFactor,
-            V->vector4_f32[2] * ScaleFactor,
-            V->vector4_f32[3] * ScaleFactor
-        } } };
-    return Result.v;
-#elif defined(_XM_SSE_INTRINSICS_)
-    XMVECTOR vResult = _mm_set_ps1(ScaleFactor);
-    return _mm_mul_ps(vResult, XM_DEREF_F(V));
 #endif
 }
 

@@ -146,7 +146,25 @@ inline void XM_CALLCONV XMStoreFloat3
 #endif
 }
 
+_Use_decl_annotations_
+inline void XM_CALLCONV XMStoreFloat4
+(
+    XMFLOAT4* pDestination,
+    FXMVECTOR  V
+)
+{
+    assert(pDestination);
+#if defined(_XM_NO_INTRINSICS_)
+    pDestination->x = V->vector4_f32[0];
+    pDestination->y = V->vector4_f32[1];
+    pDestination->z = V->vector4_f32[2];
+    pDestination->w = V->vector4_f32[3];
+#elif defined(_XM_SSE_INTRINSICS_)
+    _mm_storeu_ps(&pDestination->x, XM_DEREF_F(V));
+#endif
+}
 
+_Use_decl_annotations_
 inline void XM_CALLCONV XMStoreFloat4x4
 (
     XMFLOAT4X4* pDestination,
