@@ -293,6 +293,230 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M)
 #endif
 }
 
+//------------------------------------------------------------------------------
+// Return the inverse and the determinant of a 4x4 matrix
+_Use_decl_annotations_
+inline XMMATRIX XM_CALLCONV XMMatrixInverse
+(
+    XMVECTOR* pDeterminant,
+    FXMMATRIX  M
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMMATRIX MT = XMMatrixTranspose(M);
+
+    XMVECTOR V0[4], V1[4];
+    V0[0] = XM_VEC_SWIZZLE(MT.r[2], XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_Y, XM_SWIZZLE_Y);
+    V1[0] = XM_VEC_SWIZZLE(MT.r[3], XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Z, XM_SWIZZLE_W);
+    V0[1] = XM_VEC_SWIZZLE(MT.r[0], XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_Y, XM_SWIZZLE_Y);
+    V1[1] = XM_VEC_SWIZZLE(MT.r[1], XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Z, XM_SWIZZLE_W);
+    V0[2] = XM_VEC_PERMUTE(MT.r[2], MT.r[0],XM_PERMUTE_0X, XM_PERMUTE_0Z, XM_PERMUTE_1X, XM_PERMUTE_1Z);
+    V1[2] = XM_VEC_PERMUTE(MT.r[3], MT.r[1],XM_PERMUTE_0Y, XM_PERMUTE_0W, XM_PERMUTE_1Y, XM_PERMUTE_1W);
+
+    XMVECTOR D0 = XM_VEC_MULT(V0[0], V1[0]);
+    XMVECTOR D1 = XM_VEC_MULT(V0[1], V1[1]);
+    XMVECTOR D2 = XM_VEC_MULT(V0[2], V1[2]);
+
+    V0[0] = XM_VEC_SWIZZLE(MT.r[2], XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Z, XM_SWIZZLE_W);
+    V1[0] = XM_VEC_SWIZZLE(MT.r[3], XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_Y, XM_SWIZZLE_Y);
+    V0[1] = XM_VEC_SWIZZLE(MT.r[0], XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Z, XM_SWIZZLE_W);
+    V1[1] = XM_VEC_SWIZZLE(MT.r[1], XM_SWIZZLE_X, XM_SWIZZLE_X, XM_SWIZZLE_Y, XM_SWIZZLE_Y);
+    V0[2] = XM_VEC_PERMUTE(MT.r[2], MT.r[0], XM_PERMUTE_0Y, XM_PERMUTE_0W, XM_PERMUTE_1Y, XM_PERMUTE_1W);
+    V1[2] = XM_VEC_PERMUTE(MT.r[3], MT.r[1], XM_PERMUTE_0X, XM_PERMUTE_0Z, XM_PERMUTE_1X, XM_PERMUTE_1Z);
+
+    D0 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[0], V1[0], D0);
+    D1 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[1], V1[1], D1);
+    D2 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[2], V1[2], D2);
+
+    V0[0] = XM_VEC_SWIZZLE(MT.r[1], XM_SWIZZLE_Y, XM_SWIZZLE_Z, XM_SWIZZLE_X, XM_SWIZZLE_Y);
+    V1[0] = XM_VEC_PERMUTE(D0, D2, XM_PERMUTE_1Y, XM_PERMUTE_0Y, XM_PERMUTE_0W, XM_PERMUTE_0X);
+    V0[1] = XM_VEC_SWIZZLE(MT.r[0], XM_SWIZZLE_Z, XM_SWIZZLE_X, XM_SWIZZLE_Y, XM_SWIZZLE_X);
+    V1[1] = XM_VEC_PERMUTE(D0, D2, XM_PERMUTE_0W, XM_PERMUTE_1Y, XM_PERMUTE_0Y, XM_PERMUTE_0Z);
+    V0[2] = XM_VEC_SWIZZLE(MT.r[3], XM_SWIZZLE_Y, XM_SWIZZLE_Z, XM_SWIZZLE_X, XM_SWIZZLE_Y);
+    V1[2] = XM_VEC_PERMUTE(D1, D2, XM_PERMUTE_1W, XM_PERMUTE_0Y, XM_PERMUTE_0W, XM_PERMUTE_0X);
+    V0[3] = XM_VEC_SWIZZLE(MT.r[2], XM_SWIZZLE_Z, XM_SWIZZLE_X, XM_SWIZZLE_Y, XM_SWIZZLE_X);
+    V1[3] = XM_VEC_PERMUTE(D1, D2, XM_PERMUTE_0W, XM_PERMUTE_1W, XM_PERMUTE_0Y, XM_PERMUTE_0Z);
+
+    XMVECTOR C0 = XM_VEC_MULT(V0[0], V1[0]);
+    XMVECTOR C2 = XM_VEC_MULT(V0[1], V1[1]);
+    XMVECTOR C4 = XM_VEC_MULT(V0[2], V1[2]);
+    XMVECTOR C6 = XM_VEC_MULT(V0[3], V1[3]);
+
+    V0[0] = XM_VEC_SWIZZLE(MT.r[1], XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Y, XM_SWIZZLE_Z);
+    V1[0] = XM_VEC_PERMUTE(D0, D2, XM_PERMUTE_0W, XM_PERMUTE_0X, XM_PERMUTE_0Y, XM_PERMUTE_1X);
+    V0[1] = XM_VEC_SWIZZLE(MT.r[0], XM_SWIZZLE_W, XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Y);
+    V1[1] = XM_VEC_PERMUTE(D0, D2, XM_PERMUTE_0Z, XM_PERMUTE_0Y, XM_PERMUTE_1X, XM_PERMUTE_0X);
+    V0[2] = XM_VEC_SWIZZLE(MT.r[3], XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Y, XM_SWIZZLE_Z);
+    V1[2] = XM_VEC_PERMUTE(D1, D2, XM_PERMUTE_0W, XM_PERMUTE_0X, XM_PERMUTE_0Y, XM_PERMUTE_1Z);
+    V0[3] = XM_VEC_SWIZZLE(MT.r[2], XM_SWIZZLE_W, XM_SWIZZLE_Z, XM_SWIZZLE_W, XM_SWIZZLE_Y);
+    V1[3] = XM_VEC_PERMUTE(D1, D2, XM_PERMUTE_0Z, XM_PERMUTE_0Y, XM_PERMUTE_1Z, XM_PERMUTE_0X);
+
+    C0 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[0], V1[0], C0);
+    C2 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[1], V1[1], C2);
+    C4 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[2], V1[2], C4);
+    C6 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[3], V1[3], C6);
+
+    V0[0] = XM_VEC_SWIZZLE(MT.r[1], XM_SWIZZLE_W, XM_SWIZZLE_X, XM_SWIZZLE_W, XM_SWIZZLE_X);
+    V1[0] = XM_VEC_PERMUTE(D0, D2, XM_PERMUTE_0Z, XM_PERMUTE_1Y, XM_PERMUTE_1X, XM_PERMUTE_0Z);
+    V0[1] = XM_VEC_SWIZZLE(MT.r[0], XM_SWIZZLE_Y, XM_SWIZZLE_W, XM_SWIZZLE_X, XM_SWIZZLE_Z);
+    V1[1] = XM_VEC_PERMUTE(D0, D2, XM_PERMUTE_1Y, XM_PERMUTE_0X, XM_PERMUTE_0W, XM_PERMUTE_1X);
+    V0[2] = XM_VEC_SWIZZLE(MT.r[3], XM_SWIZZLE_W, XM_SWIZZLE_X, XM_SWIZZLE_W, XM_SWIZZLE_X);
+    V1[2] = XM_VEC_PERMUTE(D1, D2, XM_PERMUTE_0Z, XM_PERMUTE_1W, XM_PERMUTE_1Z, XM_PERMUTE_0Z);
+    V0[3] = XM_VEC_SWIZZLE(MT.r[2], XM_SWIZZLE_Y, XM_SWIZZLE_W, XM_SWIZZLE_X, XM_SWIZZLE_Z);
+    V1[3] = XM_VEC_PERMUTE(D1, D2, XM_PERMUTE_1W, XM_PERMUTE_0X, XM_PERMUTE_0W, XM_PERMUTE_1Z);
+
+    XMVECTOR C1 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[0], V1[0], C0);
+    C0 = XM_VEC_MULT_ADD(V0[0], V1[0], C0);
+    XMVECTOR C3 = XM_VEC_MULT_ADD(V0[1], V1[1], C2);
+    C2 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[1], V1[1], C2);
+    XMVECTOR C5 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[2], V1[2], C4);
+    C4 = XM_VEC_MULT_ADD(V0[2], V1[2], C4);
+    XMVECTOR C7 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[3], V1[3], C6);
+    C6 = XM_VEC_NEGATIVE_MULT_SUBTRACT(V0[3], V1[3], C6);
+
+    XMMATRIX R;
+    R.r[0] = XM_VEC_SELECT(C0, C1, g_XMSelect0101.v);
+    R.r[1] = XM_VEC_SELECT(C2, C3, g_XMSelect0101.v);
+    R.r[2] = XM_VEC_SELECT(C4, C5, g_XMSelect0101.v);
+    R.r[3] = XM_VEC_SELECT(C6, C7, g_XMSelect0101.v);
+
+    XMVECTOR Determinant = XM_VEC4_DOT(R.r[0], MT.r[0]);
+
+    if (pDeterminant != nullptr)
+        *pDeterminant = Determinant;
+
+    XMVECTOR Reciprocal = XM_VEC_RECIPROCAL(Determinant);
+
+    XMMATRIX Result;
+    Result.r[0] = XM_VEC_MULT(R.r[0], Reciprocal);
+    Result.r[1] = XM_VEC_MULT(R.r[1], Reciprocal);
+    Result.r[2] = XM_VEC_MULT(R.r[2], Reciprocal);
+    Result.r[3] = XM_VEC_MULT(R.r[3], Reciprocal);
+    return Result;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Transpose matrix
+    XMVECTOR vTemp1 = _mm_shuffle_ps(XM_DEREF_MATRIX(M).r[0], XM_DEREF_MATRIX(M).r[1], _MM_SHUFFLE(1, 0, 1, 0));
+    XMVECTOR vTemp3 = _mm_shuffle_ps(XM_DEREF_MATRIX(M).r[0], XM_DEREF_MATRIX(M).r[1], _MM_SHUFFLE(3, 2, 3, 2));
+    XMVECTOR vTemp2 = _mm_shuffle_ps(XM_DEREF_MATRIX(M).r[2], XM_DEREF_MATRIX(M).r[3], _MM_SHUFFLE(1, 0, 1, 0));
+    XMVECTOR vTemp4 = _mm_shuffle_ps(XM_DEREF_MATRIX(M).r[2], XM_DEREF_MATRIX(M).r[3], _MM_SHUFFLE(3, 2, 3, 2));
+
+    XMMATRIX MT;
+    MT.r[0] = _mm_shuffle_ps(vTemp1, vTemp2, _MM_SHUFFLE(2, 0, 2, 0));
+    MT.r[1] = _mm_shuffle_ps(vTemp1, vTemp2, _MM_SHUFFLE(3, 1, 3, 1));
+    MT.r[2] = _mm_shuffle_ps(vTemp3, vTemp4, _MM_SHUFFLE(2, 0, 2, 0));
+    MT.r[3] = _mm_shuffle_ps(vTemp3, vTemp4, _MM_SHUFFLE(3, 1, 3, 1));
+
+    XMVECTOR V00 = XM_PERMUTE_PS(MT.r[2], _MM_SHUFFLE(1, 1, 0, 0));
+    XMVECTOR V10 = XM_PERMUTE_PS(MT.r[3], _MM_SHUFFLE(3, 2, 3, 2));
+    XMVECTOR V01 = XM_PERMUTE_PS(MT.r[0], _MM_SHUFFLE(1, 1, 0, 0));
+    XMVECTOR V11 = XM_PERMUTE_PS(MT.r[1], _MM_SHUFFLE(3, 2, 3, 2));
+    XMVECTOR V02 = _mm_shuffle_ps(MT.r[2], MT.r[0], _MM_SHUFFLE(2, 0, 2, 0));
+    XMVECTOR V12 = _mm_shuffle_ps(MT.r[3], MT.r[1], _MM_SHUFFLE(3, 1, 3, 1));
+
+    XMVECTOR D0 = _mm_mul_ps(V00, V10);
+    XMVECTOR D1 = _mm_mul_ps(V01, V11);
+    XMVECTOR D2 = _mm_mul_ps(V02, V12);
+
+    V00 = XM_PERMUTE_PS(MT.r[2], _MM_SHUFFLE(3, 2, 3, 2));
+    V10 = XM_PERMUTE_PS(MT.r[3], _MM_SHUFFLE(1, 1, 0, 0));
+    V01 = XM_PERMUTE_PS(MT.r[0], _MM_SHUFFLE(3, 2, 3, 2));
+    V11 = XM_PERMUTE_PS(MT.r[1], _MM_SHUFFLE(1, 1, 0, 0));
+    V02 = _mm_shuffle_ps(MT.r[2], MT.r[0], _MM_SHUFFLE(3, 1, 3, 1));
+    V12 = _mm_shuffle_ps(MT.r[3], MT.r[1], _MM_SHUFFLE(2, 0, 2, 0));
+
+    D0 = XM_FNMADD_PS(V00, V10, D0);
+    D1 = XM_FNMADD_PS(V01, V11, D1);
+    D2 = XM_FNMADD_PS(V02, V12, D2);
+    // V11 = D0Y,D0W,D2Y,D2Y
+    V11 = _mm_shuffle_ps(D0, D2, _MM_SHUFFLE(1, 1, 3, 1));
+    V00 = XM_PERMUTE_PS(MT.r[1], _MM_SHUFFLE(1, 0, 2, 1));
+    V10 = _mm_shuffle_ps(V11, D0, _MM_SHUFFLE(0, 3, 0, 2));
+    V01 = XM_PERMUTE_PS(MT.r[0], _MM_SHUFFLE(0, 1, 0, 2));
+    V11 = _mm_shuffle_ps(V11, D0, _MM_SHUFFLE(2, 1, 2, 1));
+    // V13 = D1Y,D1W,D2W,D2W
+    XMVECTOR V13 = _mm_shuffle_ps(D1, D2, _MM_SHUFFLE(3, 3, 3, 1));
+    V02 = XM_PERMUTE_PS(MT.r[3], _MM_SHUFFLE(1, 0, 2, 1));
+    V12 = _mm_shuffle_ps(V13, D1, _MM_SHUFFLE(0, 3, 0, 2));
+    XMVECTOR V03 = XM_PERMUTE_PS(MT.r[2], _MM_SHUFFLE(0, 1, 0, 2));
+    V13 = _mm_shuffle_ps(V13, D1, _MM_SHUFFLE(2, 1, 2, 1));
+
+    XMVECTOR C0 = _mm_mul_ps(V00, V10);
+    XMVECTOR C2 = _mm_mul_ps(V01, V11);
+    XMVECTOR C4 = _mm_mul_ps(V02, V12);
+    XMVECTOR C6 = _mm_mul_ps(V03, V13);
+
+    // V11 = D0X,D0Y,D2X,D2X
+    V11 = _mm_shuffle_ps(D0, D2, _MM_SHUFFLE(0, 0, 1, 0));
+    V00 = XM_PERMUTE_PS(MT.r[1], _MM_SHUFFLE(2, 1, 3, 2));
+    V10 = _mm_shuffle_ps(D0, V11, _MM_SHUFFLE(2, 1, 0, 3));
+    V01 = XM_PERMUTE_PS(MT.r[0], _MM_SHUFFLE(1, 3, 2, 3));
+    V11 = _mm_shuffle_ps(D0, V11, _MM_SHUFFLE(0, 2, 1, 2));
+    // V13 = D1X,D1Y,D2Z,D2Z
+    V13 = _mm_shuffle_ps(D1, D2, _MM_SHUFFLE(2, 2, 1, 0));
+    V02 = XM_PERMUTE_PS(MT.r[3], _MM_SHUFFLE(2, 1, 3, 2));
+    V12 = _mm_shuffle_ps(D1, V13, _MM_SHUFFLE(2, 1, 0, 3));
+    V03 = XM_PERMUTE_PS(MT.r[2], _MM_SHUFFLE(1, 3, 2, 3));
+    V13 = _mm_shuffle_ps(D1, V13, _MM_SHUFFLE(0, 2, 1, 2));
+
+    C0 = XM_FNMADD_PS(V00, V10, C0);
+    C2 = XM_FNMADD_PS(V01, V11, C2);
+    C4 = XM_FNMADD_PS(V02, V12, C4);
+    C6 = XM_FNMADD_PS(V03, V13, C6);
+
+    V00 = XM_PERMUTE_PS(MT.r[1], _MM_SHUFFLE(0, 3, 0, 3));
+    // V10 = D0Z,D0Z,D2X,D2Y
+    V10 = _mm_shuffle_ps(D0, D2, _MM_SHUFFLE(1, 0, 2, 2));
+    V10 = XM_PERMUTE_PS(V10, _MM_SHUFFLE(0, 2, 3, 0));
+    V01 = XM_PERMUTE_PS(MT.r[0], _MM_SHUFFLE(2, 0, 3, 1));
+    // V11 = D0X,D0W,D2X,D2Y
+    V11 = _mm_shuffle_ps(D0, D2, _MM_SHUFFLE(1, 0, 3, 0));
+    V11 = XM_PERMUTE_PS(V11, _MM_SHUFFLE(2, 1, 0, 3));
+    V02 = XM_PERMUTE_PS(MT.r[3], _MM_SHUFFLE(0, 3, 0, 3));
+    // V12 = D1Z,D1Z,D2Z,D2W
+    V12 = _mm_shuffle_ps(D1, D2, _MM_SHUFFLE(3, 2, 2, 2));
+    V12 = XM_PERMUTE_PS(V12, _MM_SHUFFLE(0, 2, 3, 0));
+    V03 = XM_PERMUTE_PS(MT.r[2], _MM_SHUFFLE(2, 0, 3, 1));
+    // V13 = D1X,D1W,D2Z,D2W
+    V13 = _mm_shuffle_ps(D1, D2, _MM_SHUFFLE(3, 2, 3, 0));
+    V13 = XM_PERMUTE_PS(V13, _MM_SHUFFLE(2, 1, 0, 3));
+
+    V00 = _mm_mul_ps(V00, V10);
+    V01 = _mm_mul_ps(V01, V11);
+    V02 = _mm_mul_ps(V02, V12);
+    V03 = _mm_mul_ps(V03, V13);
+    XMVECTOR C1 = _mm_sub_ps(C0, V00);
+    C0 = _mm_add_ps(C0, V00);
+    XMVECTOR C3 = _mm_add_ps(C2, V01);
+    C2 = _mm_sub_ps(C2, V01);
+    XMVECTOR C5 = _mm_sub_ps(C4, V02);
+    C4 = _mm_add_ps(C4, V02);
+    XMVECTOR C7 = _mm_add_ps(C6, V03);
+    C6 = _mm_sub_ps(C6, V03);
+
+    C0 = _mm_shuffle_ps(C0, C1, _MM_SHUFFLE(3, 1, 2, 0));
+    C2 = _mm_shuffle_ps(C2, C3, _MM_SHUFFLE(3, 1, 2, 0));
+    C4 = _mm_shuffle_ps(C4, C5, _MM_SHUFFLE(3, 1, 2, 0));
+    C6 = _mm_shuffle_ps(C6, C7, _MM_SHUFFLE(3, 1, 2, 0));
+    C0 = XM_PERMUTE_PS(C0, _MM_SHUFFLE(3, 1, 2, 0));
+    C2 = XM_PERMUTE_PS(C2, _MM_SHUFFLE(3, 1, 2, 0));
+    C4 = XM_PERMUTE_PS(C4, _MM_SHUFFLE(3, 1, 2, 0));
+    C6 = XM_PERMUTE_PS(C6, _MM_SHUFFLE(3, 1, 2, 0));
+    // Get the determinant
+    XMVECTOR vTemp = XM_VEC4_DOT(C0, MT.r[0]);
+    if (pDeterminant != NULL)
+        *pDeterminant = vTemp;
+    vTemp = _mm_div_ps(g_XMOne.v, vTemp);
+    XMMATRIX mResult;
+    mResult.r[0] = _mm_mul_ps(C0, vTemp);
+    mResult.r[1] = _mm_mul_ps(C2, vTemp);
+    mResult.r[2] = _mm_mul_ps(C4, vTemp);
+    mResult.r[3] = _mm_mul_ps(C6, vTemp);
+    return mResult;
+#endif
+}
+
 inline XMMATRIX XM_CALLCONV XMMatrixTranslation
 (
     float OffsetX,

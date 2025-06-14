@@ -25,6 +25,7 @@
 #include <math.h>
 #include <float.h>
 #include <stdbool.h>
+#include <assert.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
@@ -88,6 +89,13 @@
 #else
 #define XM_FMADD_PS( a, b, c ) _mm_add_ps(_mm_mul_ps((a), (b)), (c))
 #define XM_FNMADD_PS( a, b, c ) _mm_sub_ps((c), _mm_mul_ps((a), (b)))
+#endif
+
+
+#if defined(_XM_AVX_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
+#define XM_PERMUTE_PS( v, c ) _mm_permute_ps((v), c )
+#else
+#define XM_PERMUTE_PS( v, c ) _mm_shuffle_ps((v), (v), c )
 #endif
 
 #if defined(_XM_AVX_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
@@ -401,6 +409,13 @@ typedef XM_ALIGNED_STRUCT(16) XMVECTORU32
 #endif
 
 /****************************************************************************
+ Store operations
+****************************************************************************/
+
+void XM_CALLCONV XMStoreFloat3(_Out_ XMFLOAT3* pDestination, _In_ FXMVECTOR V);
+#define XM_STORE_FLOAT3(pDEST, V) XMStoreFloat3(pDEST, XM_DEREF_1V(V))
+
+/****************************************************************************
  Load operations
 ****************************************************************************/
 
@@ -415,6 +430,18 @@ void XM_CALLCONV XMStoreFloat4x4(XMFLOAT4X4* pDestination, FXMMATRIX M);
 void XM_CALLCONV XMStoreFloat4x4A(XMFLOAT4X4A* pDestination, FXMMATRIX M);
 XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource);
 XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource);
+
+
+/****************************************************************************
+ *
+ * General vector operations
+ *
+ ****************************************************************************/
+
+XMVECTOR XM_CALLCONV XMVectorSplatX(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVectorSplatY(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVectorSplatZ(FXMVECTOR V);
+XMVECTOR XM_CALLCONV XMVectorSplatW(FXMVECTOR V);
 
 /****************************************************************************
  3D vector operations
@@ -475,6 +502,9 @@ XMVECTOR XM_CALLCONV XMVector3Dot(FXMVECTOR V1, FXMVECTOR V2);
 XMVECTOR XM_CALLCONV XMVectorSelect(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR Control);
 #define XM_VEC_SELECT(V1,V2,CONTROL) XMVectorSelect(XM_REF_3V(V1,V2,CONTROL))
 
+XMVECTOR XM_CALLCONV XMVectorAdd(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_ADD(V1,V2) XMVectorAdd(XM_REF_2V(V1,V2))
+
 XMVECTOR XM_CALLCONV XMVectorSubtract(FXMVECTOR V1, FXMVECTOR V2);
 #define XM_VEC_SUBTRACT(V1,V2) XMVectorSubtract(XM_REF_2V(V1,V2))
 
@@ -517,6 +547,9 @@ void XM_CALLCONV  XMVectorGetWPtr(_Out_ float* w, _In_ FXMVECTOR V);
 XMVECTOR XM_CALLCONV XMVectorNegativeMultiplySubtract(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
 #define XM_VEC_NEGATIVE_MULT_SUBTRACT(V1,V2,V3) XMVectorNegativeMultiplySubtract(XM_REF_3V(V1,V2,V3))
 
+XMVECTOR XM_CALLCONV XMVectorReciprocal(FXMVECTOR V);
+#define XM_VEC_RECIPROCAL(V) XMVectorReciprocal(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVectorMultiplyAdd(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR V3);
 #define XM_VEC_MULT_ADD(V1,V2,V3) XMVectorMultiplyAdd(XM_REF_3V(V1,V2,V3))
 
@@ -524,6 +557,20 @@ XMVECTOR XM_CALLCONV  XMVector4Dot(FXMVECTOR V1, FXMVECTOR V2);
 #define XM_VEC4_DOT(V1,V2) XMVector4Dot(XM_REF_2V(V1,V2))
 
 XMVECTOR XM_CALLCONV XMVectorReplicatePtr(const float* pValue);
+
+XMVECTOR XM_CALLCONV XMVector3Transform(FXMVECTOR V, FXMMATRIX M);
+#define XM_VEC3_TRANSFORM(V, M) XMVector3Transform(XM_REF_1V(V), XM_REF_1M(M))
+
+/*****************************************************************************************
+* Vector Permute
+* TODO: Optimizations
+******************************************************************************************/
+
+
+inline XMVECTOR XM_CALLCONV XMVectorPermute(FXMVECTOR V1, FXMVECTOR V2,
+    uint32_t PermuteX, uint32_t PermuteY, uint32_t PermuteZ, uint32_t PermuteW);
+
+#define XM_VEC_PERMUTE(V1, V2, X, Y, Z, W) XMVectorPermute(XM_REF_2V(V1,V2), X, Y, Z, W)
 
 /*****************************************************************************************
 * Vector Swizzle
@@ -624,6 +671,9 @@ XMMATRIX XM_CALLCONV XMMatrixMultiply(FXMMATRIX M1, CXMMATRIX M2);
 
 XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M);
 #define XM_MAT_TRANSP(M) XMMatrixTranspose(XM_REF_1M(M))
+
+XMMATRIX XM_CALLCONV XMMatrixInverse(_Out_opt_ XMVECTOR* pDeterminant, _In_ FXMMATRIX M);
+#define XM_MAT_INV(DET, M) XMMatrixInverse(DET, XM_MAT_1M(M))
 
 XMMATRIX XM_CALLCONV XMMatrixTranslation(float OffsetX, float OffsetY, float OffsetZ);
 #define XM_MAT_TRANSLATION(OFFSETX, OFFSETY, OFFSETZ) XMMatrixTranslation(OFFSETX, OFFSETY, OFFSETZ)

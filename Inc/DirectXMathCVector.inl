@@ -176,6 +176,78 @@ inline XMVECTOR XM_CALLCONV XMVectorZero()
 #endif
 }
 
+//------------------------------------------------------------------------------
+// Replicate the x component of the vector
+inline XMVECTOR XM_CALLCONV XMVectorSplatX(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 vResult;
+    vResult.f[0] =
+        vResult.f[1] =
+        vResult.f[2] =
+        vResult.f[3] = V->vector4_f32[0];
+    return vResult.v;
+#elif defined(_XM_AVX2_INTRINSICS_) && defined(_XM_FAVOR_INTEL_)
+    return _mm_broadcastss_ps(XM_DEREF_F(V));
+#elif defined(_XM_SSE_INTRINSICS_)
+    return XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(0, 0, 0, 0));
+#endif
+}
+
+//------------------------------------------------------------------------------
+// Replicate the y component of the vector
+inline XMVECTOR XM_CALLCONV XMVectorSplatY(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 vResult;
+    vResult.f[0] =
+        vResult.f[1] =
+        vResult.f[2] =
+        vResult.f[3] = V->vector4_f32[1];
+    return vResult.v;
+#elif defined(_XM_ARM_NEON_INTRINSICS_)
+    return vdupq_lane_f32(vget_low_f32(XM_DEREF_F(V)), 1);
+#elif defined(_XM_SSE_INTRINSICS_)
+    return XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(1, 1, 1, 1));
+#endif
+}
+
+//------------------------------------------------------------------------------
+// Replicate the z component of the vector
+inline XMVECTOR XM_CALLCONV XMVectorSplatZ(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 vResult;
+    vResult.f[0] =
+        vResult.f[1] =
+        vResult.f[2] =
+        vResult.f[3] = V->vector4_f32[2];
+    return vResult.v;
+#elif defined(_XM_ARM_NEON_INTRINSICS_)
+    return vdupq_lane_f32(vget_high_f32(XM_DEREF_F(V)), 0);
+#elif defined(_XM_SSE_INTRINSICS_)
+    return XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(2, 2, 2, 2));
+#endif
+}
+
+//------------------------------------------------------------------------------
+// Replicate the w component of the vector
+inline XMVECTOR XM_CALLCONV XMVectorSplatW(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 vResult;
+    vResult.f[0] =
+        vResult.f[1] =
+        vResult.f[2] =
+        vResult.f[3] = V->vector4_f32[3];
+    return vResult.v;
+#elif defined(_XM_ARM_NEON_INTRINSICS_)
+    return vdupq_lane_f32(vget_high_f32(XM_DEREF_F(V)), 1);
+#elif defined(_XM_SSE_INTRINSICS_)
+    return XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(3, 3, 3, 3));
+#endif
+}
+
 
 inline XMVECTOR XM_CALLCONV XMVectorMultiply
 (
@@ -703,6 +775,21 @@ inline XMVECTOR XM_CALLCONV XMVectorNegativeMultiplySubtract
 #endif
 }
 
+inline XMVECTOR XM_CALLCONV XMVectorReciprocal(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            1.f / V->vector4_f32[0],
+            1.f / V->vector4_f32[1],
+            1.f / V->vector4_f32[2],
+            1.f / V->vector4_f32[3]
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_div_ps(g_XMOne.v, XM_DEREF_F(V));
+#endif
+}
+
 inline XMVECTOR XM_CALLCONV XMVectorMultiplyAdd
 (
     FXMVECTOR V1,
@@ -793,6 +880,92 @@ inline XMVECTOR XM_CALLCONV XMVector4Length(FXMVECTOR V)
     // Get the length
     vLengthSq = _mm_sqrt_ps(vLengthSq);
     return vLengthSq;
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorPermute
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2,
+    uint32_t PermuteX,
+    uint32_t PermuteY,
+    uint32_t PermuteZ,
+    uint32_t PermuteW
+)
+{
+    assert(PermuteX <= 7 && PermuteY <= 7 && PermuteZ <= 7 && PermuteW <= 7);
+    _Analysis_assume_(PermuteX <= 7 && PermuteY <= 7 && PermuteZ <= 7 && PermuteW <= 7);
+
+    #if defined(_XM_AVX_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+    static const XMVECTORU32 three = { { { 3, 3, 3, 3 } } };
+
+    XM_ALIGNED_DATA(16) unsigned int elem[4] = { PermuteX, PermuteY, PermuteZ, PermuteW };
+    __m128i vControl = _mm_load_si128((const __m128i*)(&elem[0]));
+
+    __m128i vSelect = _mm_cmpgt_epi32(vControl, _mm_castps_si128(three.v));
+    vControl = _mm_castps_si128(_mm_and_ps(_mm_castsi128_ps(vControl), three.v));
+
+    __m128 shuffled1 = _mm_permutevar_ps(XM_DEREF_F(V1), vControl);
+    __m128 shuffled2 = _mm_permutevar_ps(XM_DEREF_F(V2), vControl);
+
+    __m128 masked1 = _mm_andnot_ps(_mm_castsi128_ps(vSelect), shuffled1);
+    __m128 masked2 = _mm_and_ps(_mm_castsi128_ps(vSelect), shuffled2);
+
+    return _mm_or_ps(masked1, masked2);
+    #else
+
+    const uint32_t* aPtr[2];
+    aPtr[0] = (const uint32_t*)(&V1);
+    aPtr[1] = (const uint32_t*)(&V2);
+
+    XMVECTOR Result;
+    uint32_t* pWork = (uint32_t*)(&Result);
+
+    const uint32_t i0 = PermuteX & 3;
+    const uint32_t vi0 = PermuteX >> 2;
+    pWork[0] = aPtr[vi0][i0];
+
+    const uint32_t i1 = PermuteY & 3;
+    const uint32_t vi1 = PermuteY >> 2;
+    pWork[1] = aPtr[vi1][i1];
+
+    const uint32_t i2 = PermuteZ & 3;
+    const uint32_t vi2 = PermuteZ >> 2;
+    pWork[2] = aPtr[vi2][i2];
+
+    const uint32_t i3 = PermuteW & 3;
+    const uint32_t vi3 = PermuteW >> 2;
+    pWork[3] = aPtr[vi3][i3];
+
+    return Result;
+    #endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVector3Transform
+(
+    FXMVECTOR V,
+    FXMMATRIX M
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTOR Z = XMVectorSplatZ(V);
+    XMVECTOR Y = XMVectorSplatY(V);
+    XMVECTOR X = XMVectorSplatX(V);
+
+    XMVECTOR Result = XMVectorMultiplyAdd(Z, M->r[2], M->r[3]);
+    Result = XMVectorMultiplyAdd(Y, M->r[1], Result);
+    Result = XMVectorMultiplyAdd(X, M->r[0], Result);
+
+    return Result;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMVECTOR vResult = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(2, 2, 2, 2)); // Z
+    vResult = XM_FMADD_PS(vResult, XM_DEREF_MATRIX(M).r[2], XM_DEREF_MATRIX(M).r[3]);
+    XMVECTOR vTemp = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(1, 1, 1, 1)); // Y
+    vResult = XM_FMADD_PS(vTemp, XM_DEREF_MATRIX(M).r[1], vResult);
+    vTemp = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(0, 0, 0, 0)); // X
+    vResult = XM_FMADD_PS(vTemp, XM_DEREF_MATRIX(M).r[0], vResult);
+    return vResult;
 #endif
 }
 
