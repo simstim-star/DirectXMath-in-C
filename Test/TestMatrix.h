@@ -175,12 +175,12 @@ TEST_DECLARE(alloc_4x4) {
             float mf = XM_VEC_IDX(m.r[i / 4], i % 4);
             if (f != check) {
                 TEST_LOG_FAILED("Alloc 4x4 - corrupted source float");
-                fprintf(stderr, "%p corrupted source float %p: %x ... %x\n", (void*)(j), (void*)(i), f, check);
+                fprintf(stderr, "%p corrupted source float %p: %f ... %f\n", (void*)(j), (void*)(i), f, check);
                 TEST_ASSERT(false);
             }
             if (mf != check) {
                 TEST_LOG_FAILED("Alloc 4x4 - improperly read float");
-                fprintf(stderr, "%p corrupted read float %p: %x ... %x\n", (void*)(j), (void*)(i), mf, check);
+                fprintf(stderr, "%p corrupted read float %p: %f ... %f\n", (void*)(j), (void*)(i), mf, check);
                 TEST_ASSERT(false);
             }
         }

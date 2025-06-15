@@ -258,16 +258,16 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranspose(FXMMATRIX M)
     //     m30m31m32m33
 
     XMMATRIX P;
-    P.r[0] = XMVectorMergeXY(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,2)); // m00m20m01m21
-    P.r[1] = XMVectorMergeXY(XM_MATRIX_GET(M,1), XM_MATRIX_GET(M,3)); // m10m30m11m31
-    P.r[2] = XMVectorMergeZW(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,2)); // m02m22m03m23
-    P.r[3] = XMVectorMergeZW(XM_MATRIX_GET(M,1), XM_MATRIX_GET(M,3)); // m12m32m13m33
+    P.r[0] = XM_VEC_MERGE_XY(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,2)); // m00m20m01m21
+    P.r[1] = XM_VEC_MERGE_XY(XM_MATRIX_GET(M,1), XM_MATRIX_GET(M,3)); // m10m30m11m31
+    P.r[2] = XM_VEC_MERGE_ZW(XM_MATRIX_GET(M,0), XM_MATRIX_GET(M,2)); // m02m22m03m23
+    P.r[3] = XM_VEC_MERGE_ZW(XM_MATRIX_GET(M,1), XM_MATRIX_GET(M,3)); // m12m32m13m33
 
     XMMATRIX MT;
-    MT.r[0] = XMVectorMergeXY(P.r[0], P.r[1]); // m00m10m20m30
-    MT.r[1] = XMVectorMergeZW(P.r[0], P.r[1]); // m01m11m21m31
-    MT.r[2] = XMVectorMergeXY(P.r[2], P.r[3]); // m02m12m22m32
-    MT.r[3] = XMVectorMergeZW(P.r[2], P.r[3]); // m03m13m23m33
+    MT.r[0] = XM_VEC_MERGE_XY(P.r[0], P.r[1]); // m00m10m20m30
+    MT.r[1] = XM_VEC_MERGE_ZW(P.r[0], P.r[1]); // m01m11m21m31
+    MT.r[2] = XM_VEC_MERGE_XY(P.r[2], P.r[3]); // m02m12m22m32
+    MT.r[3] = XM_VEC_MERGE_ZW(P.r[2], P.r[3]); // m03m13m23m33
     return MT;
 
 #elif defined(_XM_SSE_INTRINSICS_)
@@ -383,7 +383,7 @@ inline XMMATRIX XM_CALLCONV XMMatrixInverse
 
     XMVECTOR Determinant = XM_VEC4_DOT(R.r[0], MT.r[0]);
 
-    if (pDeterminant != nullptr)
+    if (pDeterminant != NULL)
         *pDeterminant = Determinant;
 
     XMVECTOR Reciprocal = XM_VEC_RECIPROCAL(Determinant);

@@ -99,7 +99,7 @@ inline void XM_CALLCONV XMVectorGetYPtr(float* y, FXMVECTOR V)
 #if defined(_XM_NO_INTRINSICS_)
     *y = V->vector4_f32[1];
 #elif defined(_XM_SSE4_INTRINSICS_)
-    * ((int*)(y)) = _mm_extract_ps(V, 1);
+    * ((int*)(y)) = _mm_extract_ps(XM_DEREF_F(V), 1);
 #elif defined(_XM_SSE_INTRINSICS_)
     XMVECTOR vResult = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(1, 1, 1, 1));
     _mm_store_ss(y, vResult);
@@ -114,7 +114,7 @@ inline void XM_CALLCONV XMVectorGetZPtr(float* z, FXMVECTOR V)
 #if defined(_XM_NO_INTRINSICS_)
     *z = V->vector4_f32[2];
 #elif defined(_XM_SSE4_INTRINSICS_)
-    * ((int*)(z)) = _mm_extract_ps(V, 2);
+    * ((int*)(z)) = _mm_extract_ps(XM_DEREF_F(V), 2);
 #elif defined(_XM_SSE_INTRINSICS_)
     XMVECTOR vResult = XM_PERMUTE_PS(XM_DEREF_F(V), _MM_SHUFFLE(2, 2, 2, 2));
     _mm_store_ss(z, vResult);
@@ -153,9 +153,9 @@ inline bool XM_CALLCONV XMVector3Equal
 inline bool XM_CALLCONV XMVector3IsInfinite(FXMVECTOR V)
 {
 #if defined(_XM_NO_INTRINSICS_)
-    return (XMISINF(V.vector4_f32[0]) ||
-        XMISINF(V.vector4_f32[1]) ||
-        XMISINF(V.vector4_f32[2]));
+    return (XMISINF(V->vector4_f32[0]) ||
+        XMISINF(V->vector4_f32[1]) ||
+        XMISINF(V->vector4_f32[2]));
 #elif defined(_XM_SSE_INTRINSICS_)
     // Mask off the sign bit
     __m128 vTemp = _mm_and_ps(XM_DEREF_F(V), g_XMAbsMask.v);
@@ -442,32 +442,6 @@ inline XMVECTOR XM_CALLCONV XMVectorReplicatePtr(const float* pValue)
 #endif
 }
 
-inline XMVECTOR XM_CALLCONV XMVector3ReciprocalLengthEst(FXMVECTOR V)
-{
-#if defined(_XM_NO_INTRINSICS_)
-    XMVECTOR Result;
-    Result = XMVector3LengthSq(V);
-    Result = XMVectorReciprocalSqrtEst(Result);
-    return Result;
-#elif defined(_XM_SSE_INTRINSICS_)
-    // Perform the dot product on x,y and z
-    XMVECTOR vLengthSq = _mm_mul_ps(XM_DEREF_F(V), XM_DEREF_F(V));
-    // vTemp has z and y
-    XMVECTOR vTemp = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(1, 2, 1, 2));
-    // x+z, y
-    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
-    // y,y,y,y
-    vTemp = XM_PERMUTE_PS(vTemp, _MM_SHUFFLE(1, 1, 1, 1));
-    // x+z+y,??,??,??
-    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
-    // Splat the length squared
-    vLengthSq = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(0, 0, 0, 0));
-    // Get the reciprocal
-    vLengthSq = _mm_rsqrt_ps(vLengthSq);
-    return vLengthSq;
-#endif
-}
-
 // XMVector3NormalizeEst uses a reciprocal estimate and
 // returns QNaN on zero and infinite vectors.
 
@@ -476,8 +450,8 @@ inline XMVECTOR XM_CALLCONV XMVector3NormalizeEst(FXMVECTOR V)
 #if defined(_XM_NO_INTRINSICS_)
 
     XMVECTOR Result;
-    Result = XMVector3ReciprocalLength(V);
-    Result = XMVectorMultiply(V, Result);
+    Result = XM_VEC3_RECIPROCAL_LEN(V);
+    Result = XM_VEC_MULT(V, Result);
     return Result;
 #elif defined(_XM_SSE_INTRINSICS_)
     // Perform the dot product
@@ -515,10 +489,10 @@ inline XMVECTOR XM_CALLCONV XMVector3Normalize(FXMVECTOR V)
         fLength = 1.0f / fLength;
     }
 
-    vResult.vector4_f32[0] = V.vector4_f32[0] * fLength;
-    vResult.vector4_f32[1] = V.vector4_f32[1] * fLength;
-    vResult.vector4_f32[2] = V.vector4_f32[2] * fLength;
-    vResult.vector4_f32[3] = V.vector4_f32[3] * fLength;
+    vResult.vector4_f32[0] = V->vector4_f32[0] * fLength;
+    vResult.vector4_f32[1] = V->vector4_f32[1] * fLength;
+    vResult.vector4_f32[2] = V->vector4_f32[2] * fLength;
+    vResult.vector4_f32[3] = V->vector4_f32[3] * fLength;
     return vResult;
 
 #elif defined(_XM_SSE_INTRINSICS_)
@@ -575,7 +549,6 @@ inline XMVECTOR XM_CALLCONV XMVector3Cross
     FXMVECTOR V2
 )
 {
-    // [ V1.yXM_ARG_F(V)2.z - V1.zXM_ARG_F(V)2.y, V1.zXM_ARG_F(V)2.x - V1.xXM_ARG_F(V)2.z, V1.xXM_ARG_F(V)2.y - V1.yXM_ARG_F(V)2.x ]
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTORF32 vResult = { { {
             (V1->vector4_f32[1] * V2->vector4_f32[2]) - (V1->vector4_f32[2] * V2->vector4_f32[1]),
@@ -656,6 +629,50 @@ inline XMVECTOR XM_CALLCONV XMVectorSelect
 #endif
 }
 
+inline XMVECTOR XM_CALLCONV XMVectorMergeXY
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMVECTORU32 Result = { { {
+            V1->vector4_u32[0],
+            V2->vector4_u32[0],
+            V1->vector4_u32[1],
+            V2->vector4_u32[1],
+        } } };
+    return Result.v;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_unpacklo_ps(XM_DEREF_F(V1), XM_DEREF_F(V2));
+#endif
+}
+
+//------------------------------------------------------------------------------
+
+inline XMVECTOR XM_CALLCONV XMVectorMergeZW
+(
+    FXMVECTOR V1,
+    FXMVECTOR V2
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMVECTORU32 Result = { { {
+            V1->vector4_u32[2],
+            V2->vector4_u32[2],
+            V1->vector4_u32[3],
+            V2->vector4_u32[3]
+        } } };
+    return Result.v;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_unpackhi_ps(XM_DEREF_F(V1), XM_DEREF_F(V2));
+#endif
+}
+
 inline XMVECTOR XM_CALLCONV XMVectorSubtract
 (
     FXMVECTOR V1,
@@ -680,6 +697,47 @@ inline XMVECTOR XM_CALLCONV XMVector3LengthSq(FXMVECTOR V)
     return XMVector3Dot(V, V);
 }
 
+inline XMVECTOR XM_CALLCONV XMVector3ReciprocalLengthEst(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMVECTOR Result;
+
+    Result = XM_VEC3_LEN_SQ(V);
+    Result = XM_VEC_RECIPROCAL_SQRT_EST(Result);
+
+    return Result;
+
+#elif defined(_XM_SSE4_INTRINSICS_)
+    XMVECTOR vTemp = _mm_dp_ps(XM_DEREF_F(V), XM_DEREF_F(V), 0x7f);
+    return _mm_rsqrt_ps(vTemp);
+#elif defined(_XM_SSE3_INTRINSICS_)
+    XMVECTOR vLengthSq = _mm_mul_ps(XM_DEREF_F(V), XM_DEREF_F(V));
+    vLengthSq = _mm_and_ps(vLengthSq, g_XMMask3.v);
+    vLengthSq = _mm_hadd_ps(vLengthSq, vLengthSq);
+    vLengthSq = _mm_hadd_ps(vLengthSq, vLengthSq);
+    vLengthSq = _mm_rsqrt_ps(vLengthSq);
+    return vLengthSq;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Perform the dot product on x,y and z
+    XMVECTOR vLengthSq = _mm_mul_ps(XM_DEREF_F(V), XM_DEREF_F(V));
+    // vTemp has z and y
+    XMVECTOR vTemp = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(1, 2, 1, 2));
+    // x+z, y
+    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
+    // y,y,y,y
+    vTemp = XM_PERMUTE_PS(vTemp, _MM_SHUFFLE(1, 1, 1, 1));
+    // x+z+y,??,??,??
+    vLengthSq = _mm_add_ss(vLengthSq, vTemp);
+    // Splat the length squared
+    vLengthSq = XM_PERMUTE_PS(vLengthSq, _MM_SHUFFLE(0, 0, 0, 0));
+    // Get the reciprocal
+    vLengthSq = _mm_rsqrt_ps(vLengthSq);
+    return vLengthSq;
+#endif
+}
+
+
 inline XMVECTOR XM_CALLCONV XMVectorSqrt(FXMVECTOR V)
 {
 #if defined(_XM_NO_INTRINSICS_)
@@ -695,13 +753,28 @@ inline XMVECTOR XM_CALLCONV XMVectorSqrt(FXMVECTOR V)
 #endif
 }
 
+inline XMVECTOR XM_CALLCONV XMVectorReciprocalSqrtEst(FXMVECTOR V) 
+{
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Result = { { {
+            1.f / sqrtf(V->vector4_f32[0]),
+            1.f / sqrtf(V->vector4_f32[1]),
+            1.f / sqrtf(V->vector4_f32[2]),
+            1.f / sqrtf(V->vector4_f32[3])
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE_INTRINSICS_)
+    return _mm_rsqrt_ps(XM_DEREF_F(V));
+#endif
+}
+
 inline XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V)
 {
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTOR Result;
 
-    Result = XMVector3LengthSq(V);
-    Result = XMVectorSqrt(&Result);
+    Result = XM_VEC3_LEN_SQ(V);
+    Result = XM_VEC_SQRT(Result);
 
     return Result;
 #elif defined(_XM_SSE4_INTRINSICS_)
@@ -757,10 +830,10 @@ inline XMVECTOR XM_CALLCONV XMVectorLerp
     // V0 + t * (V1 - V0)
 
 #if defined(_XM_NO_INTRINSICS_)
-    // TODO
     XMVECTOR Scale = XMVectorReplicate(t);
     XMVECTOR Length = XMVectorSubtract(V1, V0);
-    return XMVectorMultiplyAdd(Length, Scale, V0);
+    return XM_VEC_MULT_ADD(Length, Scale, V0);
+
 #elif defined(_XM_SSE_INTRINSICS_)
     XMVECTOR L = _mm_sub_ps(XM_DEREF_F(V1), XM_DEREF_F(V0));
     XMVECTOR S = _mm_set_ps1(t);
@@ -870,7 +943,7 @@ inline XMVECTOR XM_CALLCONV XMVectorNegativeMultiplySubtract
             V3->vector4_f32[2] - (V1->vector4_f32[2] * V2->vector4_f32[2]),
             V3->vector4_f32[3] - (V1->vector4_f32[3] * V2->vector4_f32[3])
         } } };
-    return Result;
+    return Result.v;
 #elif defined(_XM_SSE_INTRINSICS_)
     return XM_FNMADD_PS(XM_DEREF_F(V1), XM_DEREF_F(V2), XM_DEREF_F(V3));
 #endif
@@ -900,10 +973,10 @@ inline XMVECTOR XM_CALLCONV XMVectorMultiplyAdd
 {
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTORF32 Result = { { {
-            V1->vector4_f32[0] * V2.vector4_f32[0] + V3->vector4_f32[0],
-            V1->vector4_f32[1] * V2.vector4_f32[1] + V3->vector4_f32[1],
-            V1->vector4_f32[2] * V2.vector4_f32[2] + V3->vector4_f32[2],
-            V1->vector4_f32[3] * V2.vector4_f32[3] + V3->vector4_f32[3]
+            V1->vector4_f32[0] * V2->vector4_f32[0] + V3->vector4_f32[0],
+            V1->vector4_f32[1] * V2->vector4_f32[1] + V3->vector4_f32[1],
+            V1->vector4_f32[2] * V2->vector4_f32[2] + V3->vector4_f32[2],
+            V1->vector4_f32[3] * V2->vector4_f32[3] + V3->vector4_f32[3]
         } } };
     return Result.v;
 #elif defined(_XM_SSE_INTRINSICS_)
@@ -949,8 +1022,8 @@ inline XMVECTOR XM_CALLCONV XMVector4Length(FXMVECTOR V)
 
     XMVECTOR Result;
 
-    Result = XMVector4LengthSq(XM_DEREF_F(V));
-    Result = XMVectorSqrt(Result);
+    Result = XM_VEC4_LEN_SQ(V);
+    Result = XM_VEC_SQRT(Result);
 
     return Result;
 
@@ -982,6 +1055,11 @@ inline XMVECTOR XM_CALLCONV XMVector4Length(FXMVECTOR V)
     vLengthSq = _mm_sqrt_ps(vLengthSq);
     return vLengthSq;
 #endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVector4LengthSq(FXMVECTOR V)
+{
+    return XMVector4Dot(V, V);
 }
 
 inline XMVECTOR XM_CALLCONV XMVectorPermute
@@ -1053,9 +1131,9 @@ inline XMVECTOR XM_CALLCONV XMVector3Transform
     XMVECTOR Y = XMVectorSplatY(V);
     XMVECTOR X = XMVectorSplatX(V);
 
-    XMVECTOR Result = XMVectorMultiplyAdd(Z, M->r[2], M->r[3]);
-    Result = XMVectorMultiplyAdd(Y, M->r[1], Result);
-    Result = XMVectorMultiplyAdd(X, M->r[0], Result);
+    XMVECTOR Result = XM_VEC_MULT_ADD(Z, M->r[2], M->r[3]);
+    Result = XM_VEC_MULT_ADD(Y, M->r[1], Result);
+    Result = XM_VEC_MULT_ADD(X, M->r[0], Result);
 
     return Result;
 

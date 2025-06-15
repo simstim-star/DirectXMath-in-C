@@ -17,10 +17,10 @@ inline XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource)
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTOR V;
-    V->vector4_f32[0] = pSource->x;
-    V->vector4_f32[1] = pSource->y;
-    V->vector4_f32[2] = pSource->z;
-    V->vector4_f32[3] = 0.f;
+    V.vector4_f32[0] = pSource->x;
+    V.vector4_f32[1] = pSource->y;
+    V.vector4_f32[2] = pSource->z;
+    V.vector4_f32[3] = 0.f;
     return V;
 
 #elif defined(_XM_SSE_INTRINSICS_)

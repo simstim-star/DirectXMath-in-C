@@ -520,17 +520,32 @@ XMVECTOR XM_CALLCONV XMVector3Dot(FXMVECTOR V1, FXMVECTOR V2);
 XMVECTOR XM_CALLCONV XMVectorSelect(FXMVECTOR V1, FXMVECTOR V2, FXMVECTOR Control);
 #define XM_VEC_SELECT(V1,V2,CONTROL) XMVectorSelect(XM_REF_3V(V1,V2,CONTROL))
 
+XMVECTOR    XM_CALLCONV     XMVectorMergeXY(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_MERGE_XY(V1,V2) XMVectorMergeXY(XM_REF_2V(V1,V2))
+
+XMVECTOR    XM_CALLCONV     XMVectorMergeZW(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_MERGE_ZW(V1,V2) XMVectorMergeZW(XM_REF_2V(V1,V2))
+
 XMVECTOR XM_CALLCONV XMVectorAdd(FXMVECTOR V1, FXMVECTOR V2);
 #define XM_VEC_ADD(V1,V2) XMVectorAdd(XM_REF_2V(V1,V2))
 
 XMVECTOR XM_CALLCONV XMVectorSubtract(FXMVECTOR V1, FXMVECTOR V2);
 #define XM_VEC_SUBTRACT(V1,V2) XMVectorSubtract(XM_REF_2V(V1,V2))
 
+XMVECTOR XM_CALLCONV XMVectorReciprocalSqrtEst(FXMVECTOR V);
+#define XM_VEC_RECIPROCAL_SQRT_EST(V) XMVectorReciprocalSqrtEst(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVector3LengthSq(FXMVECTOR V);
 #define XM_VEC3_LEN_SQ(V) XMVector3LengthSq(XM_REF_1V(V))
 
+XMVECTOR XM_CALLCONV XMVector3ReciprocalLength(FXMVECTOR V);
+#define XM_VEC3_RECIPROCAL_LEN(V) XMVector3ReciprocalLength(XM_REF_1V(V))
+
 XMVECTOR XM_CALLCONV XMVectorSqrt(FXMVECTOR V);
-#define XM_VEC3_SQRT(V) XMVectorSqrt(XM_REF_1V(V))
+#define XM_VEC_SQRT(V) XMVectorSqrt(XM_REF_1V(V))
+
+XMVECTOR XM_CALLCONV XMVectorReciprocalSqrt(FXMVECTOR V);
+#define XM_VEC_RECIPROCAL_SQRT(V) XMVectorReciprocalSqrt(XM_REF_1V(V))
 
 XMVECTOR XM_CALLCONV XMVector3Length(FXMVECTOR V);
 #define XM_VEC3_LEN(V)  XMVector3Length(XM_REF_1V(V))
@@ -543,6 +558,9 @@ XMVECTOR XM_CALLCONV XMVectorLerp(FXMVECTOR V1, FXMVECTOR V2, float t);
 
 XMVECTOR XM_CALLCONV XMVector4Length(FXMVECTOR V);
 #define XM_VEC4_LEN(V) XMVector4Length(XM_REF_1V(V))
+
+XMVECTOR XM_CALLCONV XMVector4LengthSq(FXMVECTOR V);
+#define XM_VEC4_LEN_SQ(V) XMVector4LengthSq(XM_REF_1V(V))
 
 float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
 #define XM_VEC_IDX(V, IDX) XMVectorGetByIndex(XM_REF_1V(V), IDX)
@@ -581,14 +599,81 @@ XMVECTOR XM_CALLCONV XMVector3Transform(FXMVECTOR V, FXMMATRIX M);
 
 /*****************************************************************************************
 * Vector Permute
-* TODO: Optimizations
+* Note: How to make optimizations cleaner?
 ******************************************************************************************/
 
 
-inline XMVECTOR XM_CALLCONV XMVectorPermute(FXMVECTOR V1, FXMVECTOR V2,
+XMVECTOR XM_CALLCONV XMVectorPermute(FXMVECTOR V1, FXMVECTOR V2,
     uint32_t PermuteX, uint32_t PermuteY, uint32_t PermuteZ, uint32_t PermuteW);
 
 #define XM_VEC_PERMUTE(V1, V2, X, Y, Z, W) XMVectorPermute(XM_REF_2V(V1,V2), X, Y, Z, W)
+
+/*
+* The optimizations below are explicitly declared as I don't have templates.
+* The alternative would be to declare each combination from 0000 to 7777 and make almost every single one
+* call the base XMVectorPermute. This would be too much useless code.
+* The problem is that now the user needs to check if the permute he is using has one defined optimization
+* and thus implementation details have become visible.
+*/
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0145(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0145(V1, V2) XMVectorPermute_0145(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_6723(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_6723(V1, V2) XMVectorPermute_6723(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0415(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0415(V1, V2) XMVectorPermute_0415(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_2637(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_2637(V1, V2) XMVectorPermute_2637(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_2367(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_2367(V1, V2) XMVectorPermute_2367(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4123(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4123(V1, V2) XMVectorPermute_4123(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0523(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0523(V1, V2) XMVectorPermute_0523(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4523(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4523(V1, V2) XMVectorPermute_4523(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0163(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0163(V1, V2) XMVectorPermute_0163(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4163(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4163(V1, V2) XMVectorPermute_4163(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0563(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0563(V1, V2) XMVectorPermute_0563(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4563(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4563(V1, V2) XMVectorPermute_4563(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0127(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0127(V1, V2) XMVectorPermute_0127(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4127(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4127(V1, V2) XMVectorPermute_4127(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0527(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0527(V1, V2) XMVectorPermute_0527(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4527(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4527(V1, V2) XMVectorPermute_4527(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0167(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0167(V1, V2) XMVectorPermute_0167(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_4167(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_4167(V1, V2) XMVectorPermute_4167(XM_REF_2V(V1, V2))
+
+XMVECTOR XM_CALLCONV XMVectorPermute_0567(FXMVECTOR V1, FXMVECTOR V2);
+#define XM_VEC_PERMUTE_0567(V1, V2) XMVectorPermute_0567(XM_REF_2V(V1, V2))
+
+
 
 /*****************************************************************************************
 * Vector Swizzle
