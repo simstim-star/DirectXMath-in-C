@@ -20,14 +20,14 @@ XMGLOBALCONST XMVECTORF32 g_FltMax = { { { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX } 
 
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4324 4820)
+#  pragma warning(push)
+#  pragma warning(disable:4324 4820)
 // C4324: alignment padding warnings
 // C4820: Off by default noise
 #endif
 
 _Use_decl_annotations_
-inline XMContainmentType XM_CALLCONV XMBoundingSphereContainsPoint(const XMBoundingSphere *const s, const FXMVECTOR p)
+XMContainmentType XM_CALLCONV XMBoundingSphereContainsPoint(const XMBoundingSphere *const s, const FXMVECTOR p)
 {
     XMVECTOR center = XMLoadFloat3(&s->center);
     XMVECTOR r = XMVectorReplicatePtr(&s->r);
@@ -42,7 +42,7 @@ inline XMContainmentType XM_CALLCONV XMBoundingSphereContainsPoint(const XMBound
 #define XM_BOUNDING_SPHERE_CONTAINS_POINT(SPHERE, P) XMBoundingSphereContainsPoint(SPHERE, XM_REF_1V(P))
 
 _Use_decl_annotations_
-inline void XMBoundingSphereMerged(_Out_ XMBoundingSphere *out, _In_ const XMBoundingSphere *s1, _In_ const XMBoundingSphere *s2)
+void XMBoundingSphereMerged(_Out_ XMBoundingSphere *out, _In_ const XMBoundingSphere *s1, _In_ const XMBoundingSphere *s2)
 {
     XMVECTOR c1 = XMLoadFloat3(&s1->center);
     float r1 = s1->r;
@@ -96,7 +96,7 @@ inline void XMBoundingSphereMerged(_Out_ XMBoundingSphere *out, _In_ const XMBou
 // Graphics Gems.
 //-----------------------------------------------------------------------------
 _Use_decl_annotations_
-inline void XMBoundingSphereFromPoints(XMBoundingSphere* out, size_t count, const XMFLOAT3* points, size_t stride)
+void XMBoundingSphereFromPoints(XMBoundingSphere* out, size_t count, const XMFLOAT3* points, size_t stride)
 {
     assert(count > 0);
     assert(points);

@@ -19,14 +19,14 @@ XMVECTOR rand_vec16(void);
 TEST_DECLARE(bounding_sphere_merged);
 TEST_DECLARE(bounding_sphere_from_points);
 
-inline void TESTS_Collision() {
+XM_INLINE void TESTS_Collision() {
     TEST(bounding_sphere_merged);
     TEST(bounding_sphere_from_points);
 }
 
 #define COLLISION_TEST_EPSILON 0.00001
 
-inline bool SpheresEqual(const XMBoundingSphere *const s1, const XMBoundingSphere *const s2)
+XM_INLINE bool SpheresEqual(const XMBoundingSphere *const s1, const XMBoundingSphere *const s2)
 {
     return ((fabs(s1->center.x - s2->center.x) < COLLISION_TEST_EPSILON)
         && (fabs(s1->center.y - s2->center.y) < COLLISION_TEST_EPSILON)

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.8.2)
 
-# List all files containing tests. (Change as needed)
 set(TESTFILES Runner.c TestCommons.h TestMatrix.h TestCollision.h)
 set(TEST_MAIN Tests)
 

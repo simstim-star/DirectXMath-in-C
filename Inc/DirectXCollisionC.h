@@ -23,11 +23,11 @@ typedef struct XMBoundingSphere
 
 } XMBoundingSphere;
 
-inline XMContainmentType XM_CALLCONV XMBoundingSphereContainsPoint(_In_ const XMBoundingSphere* const s, _In_ const FXMVECTOR p);
+XM_INLINE XMContainmentType XM_CALLCONV XMBoundingSphereContainsPoint(_In_ const XMBoundingSphere* const s, _In_ const FXMVECTOR p);
 
-inline void XMBoundingSphereMerged(_Out_ XMBoundingSphere* out, _In_ const XMBoundingSphere* s1, _In_ const XMBoundingSphere* s2);
+XM_INLINE void XMBoundingSphereMerged(_Out_ XMBoundingSphere* out, _In_ const XMBoundingSphere* s1, _In_ const XMBoundingSphere* s2);
 
-inline void XMBoundingSphereFromPoints(_Out_ XMBoundingSphere *Out, _In_ size_t count,
+XM_INLINE void XMBoundingSphereFromPoints(_Out_ XMBoundingSphere *Out, _In_ size_t count,
     _In_reads_bytes_(sizeof(XMFLOAT3) + stride * (count - 1)) const XMFLOAT3* points, _In_ size_t stride);
 
 

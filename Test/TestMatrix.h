@@ -31,7 +31,7 @@ void WriteFloat(float fInput, char* pOutput);
 float ReadFloat(const char* pInput);
 
 // Print a matrix
-inline void printmatrixe(const XMMATRIX* xmmatrix);
+XM_INLINE void printmatrixe(const XMMATRIX* xmmatrix);
 
 enum COMPARISON CompareXMVECTOR(XMVECTOR a, XMVECTOR b, int NumElements);
 
@@ -41,7 +41,7 @@ float getdet(int size, const float* a);
 * Tests entry point                        *
 ********************************************/
 
-inline void TESTS_Matrix() {
+XM_INLINE void TESTS_Matrix() {
     TEST(mat3_is_nan);
     TEST(mat3_is_inf);
     TEST(mat3_is_identity);

@@ -12,7 +12,7 @@
 ****************************************************************************/
 
 _Use_decl_annotations_
-inline XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource)
+XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource)
 {
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
@@ -30,7 +30,7 @@ inline XMVECTOR XM_CALLCONV XMLoadFloat3(const XMFLOAT3* pSource)
 #endif
 }
 
-inline XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource) {
+XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource) {
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTOR V;
@@ -44,7 +44,7 @@ inline XMVECTOR XM_CALLCONV XMLoadInt(_In_ const uint32_t* pSource) {
 #endif
 }
 
-inline XMVECTOR XM_CALLCONV XMLoadFloat(_In_ const float* pSource) {
+XMVECTOR XM_CALLCONV XMLoadFloat(_In_ const float* pSource) {
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
     XMVECTOR V;
@@ -59,7 +59,7 @@ inline XMVECTOR XM_CALLCONV XMLoadFloat(_In_ const float* pSource) {
 }
 
 
-inline XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource)
+XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource)
 {
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
@@ -108,7 +108,7 @@ inline XMMATRIX XM_CALLCONV XMLoadFloat3x3(const XMFLOAT3X3* pSource)
 }
 
 _Use_decl_annotations_
-inline void XM_CALLCONV XMStoreFloat
+void XM_CALLCONV XMStoreFloat
 (
     float* pDestination,
     FXMVECTOR V
@@ -124,7 +124,7 @@ inline void XM_CALLCONV XMStoreFloat
 
 
 _Use_decl_annotations_
-inline void XM_CALLCONV XMStoreFloat3
+void XM_CALLCONV XMStoreFloat3
 (
     XMFLOAT3* pDestination,
     FXMVECTOR V
@@ -147,7 +147,7 @@ inline void XM_CALLCONV XMStoreFloat3
 }
 
 _Use_decl_annotations_
-inline void XM_CALLCONV XMStoreFloat4
+void XM_CALLCONV XMStoreFloat4
 (
     XMFLOAT4* pDestination,
     FXMVECTOR  V
@@ -165,7 +165,7 @@ inline void XM_CALLCONV XMStoreFloat4
 }
 
 _Use_decl_annotations_
-inline void XM_CALLCONV XMStoreFloat4x4
+void XM_CALLCONV XMStoreFloat4x4
 (
     XMFLOAT4X4* pDestination,
     FXMMATRIX M
@@ -202,7 +202,7 @@ inline void XM_CALLCONV XMStoreFloat4x4
 }
 
 _Use_decl_annotations_
-inline void XM_CALLCONV XMStoreFloat4x4A
+void XM_CALLCONV XMStoreFloat4x4A
 (
     XMFLOAT4X4A* pDestination,
     FXMMATRIX       M
@@ -241,7 +241,7 @@ inline void XM_CALLCONV XMStoreFloat4x4A
 
 //------------------------------------------------------------------------------
 _Use_decl_annotations_
-inline XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource)
+XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource)
 {
     assert(pSource);
 #if defined(_XM_NO_INTRINSICS_)
@@ -279,7 +279,7 @@ inline XMMATRIX XM_CALLCONV XMLoadFloat4x4(const XMFLOAT4X4* pSource)
 
 //------------------------------------------------------------------------------
 _Use_decl_annotations_
-inline XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource)
+XMMATRIX XM_CALLCONV XMLoadFloat4x4A(const XMFLOAT4X4A* pSource)
 {
     assert(pSource);
     assert((((uintptr_t) pSource) & 0xF) == 0);

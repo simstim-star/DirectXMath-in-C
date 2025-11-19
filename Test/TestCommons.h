@@ -5,7 +5,15 @@
 #include <stdio.h>
 
 #define TEST(FUN) test_ ## FUN()
-#define TEST_DECLARE(FUN) inline void test_ ## FUN(void)
+
+#ifdef _MSC_VER
+#  define TEST_DECLARE(FUN) inline void test_ ## FUN(void)
+#else
+#  ifdef __GNUC__
+#    define TEST_DECLARE(FUN) static inline void test_ ## FUN(void)
+#  endif
+#endif
+
 #define TEST_SUCCESS(FUN) fprintf(stdout, GREEN  "  " OK_TEXT RESET " %-*s  \n", 2, # FUN)
 #define TEST_LOG_FAILED(TEST_NAME) fprintf(stderr, RED "%s" RESET ": unit test failed\n", TEST_NAME)
 

@@ -877,7 +877,7 @@ inline XMVECTOR XM_CALLCONV XMVectorAdd
 #endif
 }
 
-inline bool XM_CALLCONV XMVector3LessOrEqual
+XM_INLINE bool XM_CALLCONV XMVector3LessOrEqual
 (
     FXMVECTOR V1,
     FXMVECTOR V2

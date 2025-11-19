@@ -27,7 +27,10 @@ if(USE_VECTORCALL)
     add_compile_definitions(_XM_VECTORCALL_)
 endif()
 
+message(STATUS "Compiler ID: ${CMAKE_C_COMPILER_ID}")
+
 if(MSVC)
+  message(STATUS "Building XMathC for MSVC")
   add_definitions(-D_WINDOWS -D_USRDLL)
 
   if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -39,7 +42,8 @@ if(MSVC)
       string(REGEX REPLACE "/RTC(su|[1su])" "" ${flag_var} "${${flag_var}}")
     endforeach(flag_var)
   endif()
-else()
+elseif(MINGW)
+  message(STATUS "Building XMathC for GCC")
   add_compile_options(-Wall)
 
   if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -89,8 +93,6 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}-config-version.cmake
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PACKAGE_NAME})
-
-
 
 # Test Configuration
 if(XM_USE_TEST)
