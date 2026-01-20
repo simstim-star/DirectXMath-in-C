@@ -47,3 +47,21 @@ cmake --build build-install-gcc --target install
 ```
 
 This will generate the folder `xmathc`, probably in `C:/`. This will allow us to use `xmathc` in other projects.
+
+
+## Usage examples
+
+To allow it to use callconv like the original DirectXMath, I had to create macros that hide the implementation details. In the original implementation, this is cleaner because C++ can pass arguments by reference or by value seamlessly to the caller.
+
+```
+XMMATRIX A_XMMATRIX = XMLoadFloat3x3(&A); // A is XMFLOAT3X3 
+XMMATRIX B_XMMATRIX = XMLoadFloat3x3(&B); // B is XMFLOAT3X3
+
+// XM_MAT_MULT macro will handle if it should pass by value or ref depending on adequate callconv 
+XMMATRIX C_XMMATRIX = XM_MAT_MULT(A_XMMATRIX, B_XMMATRIX);
+
+XMFLOAT4X4 result;
+// XM_STORE_FLOAT4X4 is a macro for the same reason XM_MAT_MULT 
+XM_STORE_FLOAT4X4(&result, C_XMMATRIX);
+```
+
