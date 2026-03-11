@@ -604,6 +604,90 @@ inline XMMATRIX XM_CALLCONV XMMatrixLookToRH
     return XMMatrixLookToLH(EyePosition, XM_REF_1V(NegEyeDirection), UpDirection);
 }
 
+inline XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovLH
+(
+    float FovAngleY,
+    float AspectRatio,
+    float NearZ,
+    float FarZ
+)
+{
+    assert(NearZ > 0.f && FarZ > 0.f);
+    assert(!XMScalarNearEqual(FovAngleY, 0.0f, 0.00001f * 2.0f));
+    assert(!XMScalarNearEqual(AspectRatio, 0.0f, 0.00001f));
+    assert(!XMScalarNearEqual(FarZ, NearZ, 0.00001f));
+
+#if defined(_XM_NO_INTRINSICS_)
+
+    float    SinFov;
+    float    CosFov;
+    XMScalarSinCos(&SinFov, &CosFov, 0.5f * FovAngleY);
+
+    float Height = CosFov / SinFov;
+    float Width = Height / AspectRatio;
+    float fRange = FarZ / (FarZ - NearZ);
+
+    XMMATRIX M;
+    M.m[0][0] = Width;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = Height;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = fRange;
+    M.m[2][3] = 1.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = -fRange * NearZ;
+    M.m[3][3] = 0.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    float    SinFov;
+    float    CosFov;
+    XMScalarSinCos(&SinFov, &CosFov, 0.5f * FovAngleY);
+
+    float fRange = FarZ / (FarZ - NearZ);
+    // Note: This is recorded on the stack
+    float Height = CosFov / SinFov;
+    XMVECTOR rMem = {
+        Height / AspectRatio,
+        Height,
+        fRange,
+        -fRange * NearZ
+    };
+    // Copy from memory to SSE register
+    XMVECTOR vValues = rMem;
+    XMVECTOR vTemp = _mm_setzero_ps();
+    // Copy x only
+    vTemp = _mm_move_ss(vTemp, vValues);
+    // Height / AspectRatio,0,0,0
+    XMMATRIX M;
+    M.r[0] = vTemp;
+    // 0,Height,0,0
+    vTemp = vValues;
+    vTemp = _mm_and_ps(vTemp, g_XMMaskY.v);
+    M.r[1] = vTemp;
+    // x=fRange,y=-fRange * NearZ,0,1.0f
+    vTemp = _mm_setzero_ps();
+    vValues = _mm_shuffle_ps(vValues, g_XMIdentityR3.v, _MM_SHUFFLE(3, 2, 3, 2));
+    // 0,0,fRange,1.0f
+    vTemp = _mm_shuffle_ps(vTemp, vValues, _MM_SHUFFLE(3, 0, 0, 0));
+    M.r[2] = vTemp;
+    // 0,0,-fRange * NearZ,0.0f
+    vTemp = _mm_shuffle_ps(vTemp, vValues, _MM_SHUFFLE(2, 1, 0, 0));
+    M.r[3] = vTemp;
+    return M;
+#endif
+}
+
 inline XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovRH
 (
     float FovAngleY,
