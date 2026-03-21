@@ -981,6 +981,47 @@ inline XMMATRIX XMMatrixScale(FXMMATRIX M, float S)
     return mResult;
 }
 
+inline XMMATRIX XMMatrixScaling
+(
+    float ScaleX,
+    float ScaleY,
+    float ScaleZ
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMMATRIX M;
+    M.m[0][0] = ScaleX;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = ScaleY;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = ScaleZ;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = 0.0f;
+    M.m[3][3] = 1.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    XMMATRIX M;
+    M.r[0] = _mm_set_ps(0, 0, 0, ScaleX);
+    M.r[1] = _mm_set_ps(0, 0, ScaleY, 0);
+    M.r[2] = _mm_set_ps(0, ScaleZ, 0, 0);
+    M.r[3] = g_XMIdentityR3.v;
+    return M;
+#endif
+}
+
 inline XMMATRIX XM_CALLCONV XMMatrixTranslationFromVector(FXMVECTOR Offset)
 {
 #if defined(_XM_NO_INTRINSICS_)

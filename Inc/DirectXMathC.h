@@ -806,6 +806,8 @@ XM_INLINE bool XM_CALLCONV XMMatrixDecompose(_Out_ XMVECTOR * outScale, _Out_ XM
 XM_INLINE XMMATRIX XMMatrixScale(FXMMATRIX M, float S);
 #define XM_MAT_SCALE(M, S) XMMatrixScale(XM_REF_1M(M), S)
 
+inline XMMATRIX XMMatrixScaling(float ScaleX, float ScaleY,	float ScaleZ);
+
 XM_INLINE XMMATRIX XM_CALLCONV XMMatrixTranslationFromVector(FXMVECTOR Offset);
 #define XM_MAT_TRANSLATION_FROM_VEC(V) XMMatrixTranslationFromVector(XM_REF_1V(V))
 
