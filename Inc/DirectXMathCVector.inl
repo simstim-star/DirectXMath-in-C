@@ -1113,57 +1113,39 @@ inline XMVECTOR XM_CALLCONV XMVectorPermute
     return _mm_or_ps(masked1, masked2);
     #else
 
-    /* TODO: I have no idea why the implementation below doesn't work
-    * it comes from official MS DX Math: https://github.com/microsoft/DirectXMath/blob/main/Inc/DirectXMathVector.inl#L1315
-    */
-
-    //const uint32_t* aPtr[2];
-    //aPtr[0] = (const uint32_t*)(&V1);
-    //aPtr[1] = (const uint32_t*)(&V2);
-    //
-    //XMVECTOR Result;
-    //uint32_t* pWork = (uint32_t*)(&Result);
-    //
-    //const uint32_t i0 = PermuteX & 3;
-    //const uint32_t vi0 = PermuteX >> 2;
-    //pWork[0] = aPtr[vi0][i0];
-    //
-    //const uint32_t i1 = PermuteY & 3;
-    //const uint32_t vi1 = PermuteY >> 2;
-    //pWork[1] = aPtr[vi1][i1];
-    //
-    //const uint32_t i2 = PermuteZ & 3;
-    //const uint32_t vi2 = PermuteZ >> 2;
-    //pWork[2] = aPtr[vi2][i2];
-    //
-    //const uint32_t i3 = PermuteW & 3;
-    //const uint32_t vi3 = PermuteW >> 2;
-    //pWork[3] = aPtr[vi3][i3];
-    //
-    //return Result;
-
-    /* Using the impl below as placeholder */
-
-    typedef union {
-        XMVECTOR v;
-        uint32_t u[4];
-    } VectorConversion;
-
-    VectorConversion vec1, vec2, result;
-
-    vec1.v = XM_DEREF_F(V1);
-    vec2.v = XM_DEREF_F(V2);
-
     const uint32_t* aPtr[2];
-    aPtr[0] = vec1.u;
-    aPtr[1] = vec2.u;
 
-    result.u[0] = aPtr[PermuteX >> 2][PermuteX & 3];
-    result.u[1] = aPtr[PermuteY >> 2][PermuteY & 3];
-    result.u[2] = aPtr[PermuteZ >> 2][PermuteZ & 3];
-    result.u[3] = aPtr[PermuteW >> 2][PermuteW & 3];
-
-    return result.v;
+    // Note: in https://github.com/microsoft/DirectXMath/blob/main/Inc/DirectXMathVector.inl#L1315, it is possible to just
+    // take a pointer always because V1 and V2 can come as value or as reference. Here in C, it will come as value or as a pointer.
+    // If it comes as a pointer and we do &V1, we will be taking the address of the pointer.
+#if (defined(_M_IX86) || _XM_VECTORCALL_ || __i386__ ) && !defined(_XM_NO_INTRINSICS_)
+    aPtr[0] = (const uint32_t*)(&V1);
+    aPtr[1] = (const uint32_t*)(&V2);
+#else
+    aPtr[0] = (const uint32_t*)(V1);
+    aPtr[1] = (const uint32_t*)(V2);
+#endif
+    
+    XMVECTOR Result;
+    uint32_t* pWork = (uint32_t*)(&Result);
+    
+    const uint32_t i0 = PermuteX & 3;
+    const uint32_t vi0 = PermuteX >> 2;
+    pWork[0] = aPtr[vi0][i0];
+    
+    const uint32_t i1 = PermuteY & 3;
+    const uint32_t vi1 = PermuteY >> 2;
+    pWork[1] = aPtr[vi1][i1];
+    
+    const uint32_t i2 = PermuteZ & 3;
+    const uint32_t vi2 = PermuteZ >> 2;
+    pWork[2] = aPtr[vi2][i2];
+    
+    const uint32_t i3 = PermuteW & 3;
+    const uint32_t vi3 = PermuteW >> 2;
+    pWork[3] = aPtr[vi3][i3];
+    
+    return Result;
     #endif
 }
 
