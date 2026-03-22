@@ -465,9 +465,13 @@ XM_INLINE XMVECTOR XM_CALLCONV XMVectorSetW(FXMVECTOR V, float w);
 #define XM_VEC_SETW(V,S) XMVectorSetW(XM_REF_1V(V), S)
 
 XM_INLINE XMVECTOR XM_CALLCONV XMVectorSplatX(FXMVECTOR V);
+#define XM_VEC_SPLATX(V,S) XMVectorSplatX(XM_REF_1V(V))
 XM_INLINE XMVECTOR XM_CALLCONV XMVectorSplatY(FXMVECTOR V);
+#define XM_VEC_SPLATY(V,S) XMVectorSplatY(XM_REF_1V(V))
 XM_INLINE XMVECTOR XM_CALLCONV XMVectorSplatZ(FXMVECTOR V);
+#define XM_VEC_SPLATZ(V,S) XMVectorSplatZ(XM_REF_1V(V))
 XM_INLINE XMVECTOR XM_CALLCONV XMVectorSplatW(FXMVECTOR V);
+#define XM_VEC_SPLATW(V,S) XMVectorSplatW(XM_REF_1V(V))
 
 XM_INLINE XMVECTOR XM_CALLCONV XMVectorScale(FXMVECTOR V, float ScaleFactor);
 #define XM_VEC_SCALE(V,S) XMVectorScale(XM_REF_1V(V), S)
@@ -575,6 +579,16 @@ XM_INLINE XMVECTOR XM_CALLCONV XMVector4LengthSq(FXMVECTOR V);
 
 XM_INLINE float XM_CALLCONV XMVectorGetByIndex(FXMVECTOR V, size_t i);
 #define XM_VEC_IDX(V, IDX) XMVectorGetByIndex(XM_REF_1V(V), IDX)
+
+XM_INLINE XMVECTOR XM_CALLCONV XMVectorRound(FXMVECTOR V);
+#define XM_VEC_ROUND(V) XMVectorRound(XM_REF_1V(V))
+
+XM_INLINE XMVECTOR XM_CALLCONV XMVectorModAngles(FXMVECTOR Angles);
+#define XM_VEC_MOD_ANGLES(V) XMVectorModAngles(XM_REF_1V(V))
+
+XM_INLINE void XM_CALLCONV XMVectorSinCos(XMVECTOR* pSin,
+    XMVECTOR* pCos,
+    FXMVECTOR V);
 
 XM_INLINE void XM_CALLCONV  XMVectorGetByIndexPtr(_Out_ float* f, _In_ FXMVECTOR V, _In_ size_t i);
 #define XM_VEC_IDX_PTR(RECEIVING_PTR, V, IDX) XMVectorGetByIndexPtr(RECEIVING_PTR, XM_REF_1V(V), IDX)
@@ -811,6 +825,12 @@ inline XMMATRIX XMMatrixScaling(float ScaleX, float ScaleY,	float ScaleZ);
 XM_INLINE XMMATRIX XM_CALLCONV XMMatrixTranslationFromVector(FXMVECTOR Offset);
 #define XM_MAT_TRANSLATION_FROM_VEC(V) XMMatrixTranslationFromVector(XM_REF_1V(V))
 
+XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYawFromVector(FXMVECTOR Angles);
+#define XM_MAT_ROTATION_ROLL_PITCH_YAW_FROM_VEC(V) XMMatrixRotationRollPitchYawFromVector(XM_REF_1V(V))
+
+XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYaw(float Pitch, float Yaw, float Row);
+#define XM_MAT_ROTATION_ROLL_PITCH_YAW(P,Y,R) XMMatrixRotationRollPitchYaw(P,Y,R)
+
 /****************************************************************************
 *
 * Quaternion operations
@@ -894,6 +914,10 @@ XM_INLINE XMVECTOR XM_CALLCONV XMQuaternionRotationMatrix(FXMMATRIX M);
 #define XM_CRMASK_CR6BOUNDS  XM_CRMASK_CR6FALSE
 #define XM_CACHE_LINE_SIZE  64
 
+XMGLOBALCONST XMVECTORF32 g_XMSinCoefficients0 = { { { -0.16666667f, +0.0083333310f, -0.00019840874f, +2.7525562e-06f } } };
+XMGLOBALCONST XMVECTORF32 g_XMSinCoefficients1 = { { { -2.3889859e-08f, -0.16665852f /*Est1*/, +0.0083139502f /*Est2*/, -0.00018524670f /*Est3*/ } } };
+XMGLOBALCONST XMVECTORF32 g_XMCosCoefficients0 = { { { -0.5f, +0.041666638f, -0.0013888378f, +2.4760495e-05f } } };
+XMGLOBALCONST XMVECTORF32 g_XMCosCoefficients1 = { { { -2.6051615e-07f, -0.49992746f /*Est1*/, +0.041493919f /*Est2*/, -0.0012712436f /*Est3*/ } } };
 XMGLOBALCONST XMVECTORF32 g_XMIdentityR0 = { { 1.0f, 0.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMIdentityR1 = { { 0.0f, 1.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMIdentityR2 = { { 0.0f, 0.0f, 1.0f, 0.0f } };
@@ -921,6 +945,13 @@ XMGLOBALCONST XMVECTORU32 g_XMSelect1011 = { { { XM_SELECT_1, XM_SELECT_0, XM_SE
 XMGLOBALCONST XMVECTORF32 g_XMOne = { { 1.0f, 1.0f, 1.0f, 1.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMOne3 = { { 1.0f, 1.0f, 1.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMZero = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+XMGLOBALCONST XMVECTORF32 g_XMTwoPi = { { { XM_2PI, XM_2PI, XM_2PI, XM_2PI } } };
+XMGLOBALCONST XMVECTORF32 g_XMPi = { { { XM_PI, XM_PI, XM_PI, XM_PI } } };
+XMGLOBALCONST XMVECTORF32 g_XMHalfPi = { { { XM_PIDIV2, XM_PIDIV2, XM_PIDIV2, XM_PIDIV2 } } };
+XMGLOBALCONST XMVECTORF32 g_XMNegativeOne = { { { -1.0f, -1.0f, -1.0f, -1.0f } } };
+XMGLOBALCONST XMVECTORF32 g_XMReciprocalTwoPi = { { { XM_1DIV2PI, XM_1DIV2PI, XM_1DIV2PI, XM_1DIV2PI } } };
+XMGLOBALCONST XMVECTORU32 g_XMNegativeZero = { { { 0x80000000, 0x80000000, 0x80000000, 0x80000000 } } };
+XMGLOBALCONST XMVECTORF32 g_XMNoFraction = { { { 8388608.0f, 8388608.0f, 8388608.0f, 8388608.0f } } };
 
 #define XMFLOAT4X4_ZERO (XMFLOAT4X4) {                  \
         ._11 = 0.f, ._12 = 0.f, ._13 = 0.f, ._14 = 0.f, \

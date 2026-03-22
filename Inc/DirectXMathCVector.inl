@@ -1,6 +1,26 @@
 #include "DirectXMathC.h"
 #pragma once
 
+// Round to nearest (even) a.k.a. banker's rounding
+inline float MathInternal__round_to_nearest(float x)
+{
+    float i = floorf(x);
+    x -= i;
+    if (x < 0.5f)
+        return i;
+    if (x > 0.5f)
+        return i + 1.f;
+
+    float int_part;
+    (void)modff(i / 2.f, &int_part);
+    if ((2.f * int_part) == i)
+    {
+        return i;
+    }
+
+    return i + 1.f;
+}
+
 // Initialize a vector with four floating point values
 inline XMVECTOR XM_CALLCONV XMVectorSet
 (
@@ -1093,30 +1113,57 @@ inline XMVECTOR XM_CALLCONV XMVectorPermute
     return _mm_or_ps(masked1, masked2);
     #else
 
+    /* TODO: I have no idea why the implementation below doesn't work
+    * it comes from official MS DX Math: https://github.com/microsoft/DirectXMath/blob/main/Inc/DirectXMathVector.inl#L1315
+    */
+
+    //const uint32_t* aPtr[2];
+    //aPtr[0] = (const uint32_t*)(&V1);
+    //aPtr[1] = (const uint32_t*)(&V2);
+    //
+    //XMVECTOR Result;
+    //uint32_t* pWork = (uint32_t*)(&Result);
+    //
+    //const uint32_t i0 = PermuteX & 3;
+    //const uint32_t vi0 = PermuteX >> 2;
+    //pWork[0] = aPtr[vi0][i0];
+    //
+    //const uint32_t i1 = PermuteY & 3;
+    //const uint32_t vi1 = PermuteY >> 2;
+    //pWork[1] = aPtr[vi1][i1];
+    //
+    //const uint32_t i2 = PermuteZ & 3;
+    //const uint32_t vi2 = PermuteZ >> 2;
+    //pWork[2] = aPtr[vi2][i2];
+    //
+    //const uint32_t i3 = PermuteW & 3;
+    //const uint32_t vi3 = PermuteW >> 2;
+    //pWork[3] = aPtr[vi3][i3];
+    //
+    //return Result;
+
+    /* Using the impl below as placeholder */
+
+    typedef union {
+        XMVECTOR v;
+        uint32_t u[4];
+    } VectorConversion;
+
+    VectorConversion vec1, vec2, result;
+
+    vec1.v = XM_DEREF_F(V1);
+    vec2.v = XM_DEREF_F(V2);
+
     const uint32_t* aPtr[2];
-    aPtr[0] = (const uint32_t*)(&V1);
-    aPtr[1] = (const uint32_t*)(&V2);
+    aPtr[0] = vec1.u;
+    aPtr[1] = vec2.u;
 
-    XMVECTOR Result;
-    uint32_t* pWork = (uint32_t*)(&Result);
+    result.u[0] = aPtr[PermuteX >> 2][PermuteX & 3];
+    result.u[1] = aPtr[PermuteY >> 2][PermuteY & 3];
+    result.u[2] = aPtr[PermuteZ >> 2][PermuteZ & 3];
+    result.u[3] = aPtr[PermuteW >> 2][PermuteW & 3];
 
-    const uint32_t i0 = PermuteX & 3;
-    const uint32_t vi0 = PermuteX >> 2;
-    pWork[0] = aPtr[vi0][i0];
-
-    const uint32_t i1 = PermuteY & 3;
-    const uint32_t vi1 = PermuteY >> 2;
-    pWork[1] = aPtr[vi1][i1];
-
-    const uint32_t i2 = PermuteZ & 3;
-    const uint32_t vi2 = PermuteZ >> 2;
-    pWork[2] = aPtr[vi2][i2];
-
-    const uint32_t i3 = PermuteW & 3;
-    const uint32_t vi3 = PermuteW >> 2;
-    pWork[3] = aPtr[vi3][i3];
-
-    return Result;
+    return result.v;
     #endif
 }
 
@@ -1148,4 +1195,142 @@ inline XMVECTOR XM_CALLCONV XMVector3Transform
 #endif
 }
 
+inline XMVECTOR XM_CALLCONV XMVectorRound(FXMVECTOR V)
+{
+#if defined(_XM_NO_INTRINSICS_)
 
+    XMVECTORF32 Result = { { {
+            MathInternal__round_to_nearest(V->vector4_f32[0]),
+            MathInternal__round_to_nearest(V->vector4_f32[1]),
+            MathInternal__round_to_nearest(V->vector4_f32[2]),
+            MathInternal__round_to_nearest(V->vector4_f32[3])
+        } } };
+    return Result.v;
+#elif defined(_XM_SSE4_INTRINSICS_)
+    return _mm_round_ps(V, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+#elif defined(_XM_SSE_INTRINSICS_)
+    __m128 sign = _mm_and_ps(XM_DEREF_F(V), g_XMNegativeZero.v);
+    __m128 sMagic = _mm_or_ps(g_XMNoFraction.v, sign);
+    __m128 R1 = _mm_add_ps(XM_DEREF_F(V), sMagic);
+    R1 = _mm_sub_ps(R1, sMagic);
+    __m128 R2 = _mm_and_ps(XM_DEREF_F(V), g_XMAbsMask.v);
+    __m128 mask = _mm_cmple_ps(R2, g_XMNoFraction.v);
+    R2 = _mm_andnot_ps(mask, XM_DEREF_F(V));
+    R1 = _mm_and_ps(R1, mask);
+    XMVECTOR vResult = _mm_xor_ps(R1, R2);
+    return vResult;
+#endif
+}
+
+inline XMVECTOR XM_CALLCONV XMVectorModAngles(FXMVECTOR Angles)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    XMVECTOR V;
+    XMVECTOR Result;
+
+    // Modulo the range of the given angles such that -XM_PI <= Angles < XM_PI
+    V = XMVectorMultiply(Angles, g_XMReciprocalTwoPi.f);
+    V = XMVectorRound(V.vector4_f32);
+    Result = XMVectorNegativeMultiplySubtract(g_XMTwoPi.f, V.vector4_f32, Angles);
+    return Result;
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Modulo the range of the given angles such that -XM_PI <= Angles < XM_PI
+    XMVECTOR vResult = _mm_mul_ps(XM_DEREF_F(Angles), g_XMReciprocalTwoPi.v);
+    // Use the inline function due to complexity for rounding
+    vResult = XMVectorRound(XM_REF_1V(vResult));
+    return XM_FNMADD_PS(vResult, g_XMTwoPi.v, XM_DEREF_F(Angles));
+#endif
+}
+
+_Use_decl_annotations_
+inline void XM_CALLCONV XMVectorSinCos
+(
+    XMVECTOR* pSin,
+    XMVECTOR* pCos,
+    FXMVECTOR V
+)
+{
+    assert(pSin != NULL);
+    assert(pCos != NULL);
+
+    // 11/10-degree minimax approximation
+
+#if defined(_XM_NO_INTRINSICS_)
+    XMVECTORF32 Sin = { { {
+            sinf(V->vector4_f32[0]),
+            sinf(V->vector4_f32[1]),
+            sinf(V->vector4_f32[2]),
+            sinf(V->vector4_f32[3])
+        } } };
+
+    XMVECTORF32 Cos = { { {
+            cosf(V->vector4_f32[0]),
+            cosf(V->vector4_f32[1]),
+            cosf(V->vector4_f32[2]),
+            cosf(V->vector4_f32[3])
+        } } };
+    *pSin = Sin.v;
+    *pCos = Cos.v;
+#elif defined(_XM_SVML_INTRINSICS_)
+    *pSin = _mm_sincos_ps(pCos, V);
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Force the value within the bounds of pi
+    XMVECTOR x = XMVectorModAngles(V);
+
+    // Map in [-pi/2,pi/2] with sin(y) = sin(x), cos(y) = sign*cos(x).
+    XMVECTOR sign = _mm_and_ps(x, g_XMNegativeZero.v);
+    __m128 c = _mm_or_ps(g_XMPi.v, sign);  // pi when x >= 0, -pi when x < 0
+    __m128 absx = _mm_andnot_ps(sign, x);  // |x|
+    __m128 rflx = _mm_sub_ps(c, x);
+    __m128 comp = _mm_cmple_ps(absx, g_XMHalfPi.v);
+    __m128 select0 = _mm_and_ps(comp, x);
+    __m128 select1 = _mm_andnot_ps(comp, rflx);
+    x = _mm_or_ps(select0, select1);
+    select0 = _mm_and_ps(comp, g_XMOne.v);
+    select1 = _mm_andnot_ps(comp, g_XMNegativeOne.v);
+    sign = _mm_or_ps(select0, select1);
+
+    __m128 x2 = _mm_mul_ps(x, x);
+
+    // Compute polynomial approximation of sine
+    const XMVECTOR SC1 = g_XMSinCoefficients1.v;
+    __m128 vConstantsB = XM_PERMUTE_PS(SC1, _MM_SHUFFLE(0, 0, 0, 0));
+    const XMVECTOR SC0 = g_XMSinCoefficients0.v;
+    __m128 vConstants = XM_PERMUTE_PS(SC0, _MM_SHUFFLE(3, 3, 3, 3));
+    __m128 Result = XM_FMADD_PS(vConstantsB, x2, vConstants);
+
+    vConstants = XM_PERMUTE_PS(SC0, _MM_SHUFFLE(2, 2, 2, 2));
+    Result = XM_FMADD_PS(Result, x2, vConstants);
+
+    vConstants = XM_PERMUTE_PS(SC0, _MM_SHUFFLE(1, 1, 1, 1));
+    Result = XM_FMADD_PS(Result, x2, vConstants);
+
+    vConstants = XM_PERMUTE_PS(SC0, _MM_SHUFFLE(0, 0, 0, 0));
+    Result = XM_FMADD_PS(Result, x2, vConstants);
+
+    Result = XM_FMADD_PS(Result, x2, g_XMOne.v);
+    Result = _mm_mul_ps(Result, x);
+    *pSin = Result;
+
+    // Compute polynomial approximation of cosine
+    const XMVECTOR CC1 = g_XMCosCoefficients1.v;
+    vConstantsB = XM_PERMUTE_PS(CC1, _MM_SHUFFLE(0, 0, 0, 0));
+    const XMVECTOR CC0 = g_XMCosCoefficients0.v;
+    vConstants = XM_PERMUTE_PS(CC0, _MM_SHUFFLE(3, 3, 3, 3));
+    Result = XM_FMADD_PS(vConstantsB, x2, vConstants);
+
+    vConstants = XM_PERMUTE_PS(CC0, _MM_SHUFFLE(2, 2, 2, 2));
+    Result = XM_FMADD_PS(Result, x2, vConstants);
+
+    vConstants = XM_PERMUTE_PS(CC0, _MM_SHUFFLE(1, 1, 1, 1));
+    Result = XM_FMADD_PS(Result, x2, vConstants);
+
+    vConstants = XM_PERMUTE_PS(CC0, _MM_SHUFFLE(0, 0, 0, 0));
+    Result = XM_FMADD_PS(Result, x2, vConstants);
+
+    Result = XM_FMADD_PS(Result, x2, g_XMOne.v);
+    Result = _mm_mul_ps(Result, sign);
+    *pCos = Result;
+#endif
+}

@@ -1057,3 +1057,117 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranslationFromVector(FXMVECTOR Offset)
     return M;
 #endif
 }
+
+inline XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYawFromVector
+(
+    FXMVECTOR Angles // <Pitch, Yaw, Roll, undefined>
+)
+{
+#if defined(_XM_NO_INTRINSICS_)
+    float cp = cosf(Angles->vector4_f32[0]);
+    float sp = sinf(Angles->vector4_f32[0]);
+
+    float cy = cosf(Angles->vector4_f32[1]);
+    float sy = sinf(Angles->vector4_f32[1]);
+
+    float cr = cosf(Angles->vector4_f32[2]);
+    float sr = sinf(Angles->vector4_f32[2]);
+
+    XMMATRIX M;
+    M.m[0][0] = cr * cy + sr * sp * sy;
+    M.m[0][1] = sr * cp;
+    M.m[0][2] = sr * sp * cy - cr * sy;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = cr * sp * sy - sr * cy;
+    M.m[1][1] = cr * cp;
+    M.m[1][2] = sr * sy + cr * sp * cy;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = cp * sy;
+    M.m[2][1] = -sp;
+    M.m[2][2] = cp * cy;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = 0.0f;
+    M.m[3][3] = 1.0f;
+    return M;
+#else
+    static const XMVECTORF32  Sign = { { { 1.0f, -1.0f, -1.0f, 1.0f } } };
+
+    XMVECTOR SinAngles, CosAngles;
+    XMVectorSinCos(&SinAngles, &CosAngles, Angles);
+
+    XMVECTOR P0 = XM_VEC_PERMUTE(SinAngles, CosAngles, XM_PERMUTE_1X, XM_PERMUTE_0Z, XM_PERMUTE_1Z, XM_PERMUTE_1X);
+    XMVECTOR Y0 = XM_VEC_PERMUTE(SinAngles, CosAngles, XM_PERMUTE_0Y, XM_PERMUTE_1X, XM_PERMUTE_1X, XM_PERMUTE_1Y);
+    XMVECTOR P1 = XM_VEC_PERMUTE(SinAngles, CosAngles, XM_PERMUTE_1Z, XM_PERMUTE_0Z, XM_PERMUTE_1Z, XM_PERMUTE_0Z);
+    XMVECTOR Y1 = XM_VEC_PERMUTE(SinAngles, CosAngles, XM_PERMUTE_1Y, XM_PERMUTE_1Y, XM_PERMUTE_0Y, XM_PERMUTE_0Y);
+    XMVECTOR P2 = XM_VEC_PERMUTE(SinAngles, CosAngles, XM_PERMUTE_0Z, XM_PERMUTE_1Z, XM_PERMUTE_0Z, XM_PERMUTE_1Z);
+    XMVECTOR P3 = XM_VEC_PERMUTE(SinAngles, CosAngles,XM_PERMUTE_0Y, XM_PERMUTE_0Y, XM_PERMUTE_1Y, XM_PERMUTE_1Y);
+    XMVECTOR Y2 = XM_VEC_SPLATX(SinAngles);
+    XMVECTOR NS = XM_VEC_NEG(SinAngles);
+
+    XMVECTOR Q0 = XM_VEC_MULT(P0, Y0);
+    XMVECTOR Q1 = XM_VEC_MULT(P1, Sign.v);
+    Q1 = XM_VEC_MULT(Q1, Y1);
+    XMVECTOR Q2 = XM_VEC_MULT(P2, Y2);
+    Q2 = XM_VEC_MULT_ADD(Q2, P3, Q1);
+
+    XMVECTOR V0 = XM_VEC_PERMUTE(Q0, Q2, XM_PERMUTE_1X, XM_PERMUTE_0Y, XM_PERMUTE_1Z, XM_PERMUTE_0W);
+    XMVECTOR V1 = XM_VEC_PERMUTE(Q0, Q2, XM_PERMUTE_1Y, XM_PERMUTE_0Z, XM_PERMUTE_1W, XM_PERMUTE_0W);
+    XMVECTOR V2 = XM_VEC_PERMUTE(Q0, NS, XM_PERMUTE_0X, XM_PERMUTE_1X, XM_PERMUTE_0W, XM_PERMUTE_0W);
+
+    XMMATRIX M;
+    M.r[0] = XM_VEC_SELECT(g_XMZero.v, V0, g_XMSelect1110.v);
+    M.r[1] = XM_VEC_SELECT(g_XMZero.v, V1, g_XMSelect1110.v);
+    M.r[2] = XM_VEC_SELECT(g_XMZero.v, V2, g_XMSelect1110.v);
+    M.r[3] = g_XMIdentityR3.v;
+    return M;
+#endif
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYaw
+(
+    float Pitch,
+    float Yaw,
+    float Roll
+) 
+{
+#if defined(_XM_NO_INTRINSICS_)
+    float cp = cosf(Pitch);
+    float sp = sinf(Pitch);
+
+    float cy = cosf(Yaw);
+    float sy = sinf(Yaw);
+
+    float cr = cosf(Roll);
+    float sr = sinf(Roll);
+
+    XMMATRIX M;
+    M.m[0][0] = cr * cy + sr * sp * sy;
+    M.m[0][1] = sr * cp;
+    M.m[0][2] = sr * sp * cy - cr * sy;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = cr * sp * sy - sr * cy;
+    M.m[1][1] = cr * cp;
+    M.m[1][2] = sr * sy + cr * sp * cy;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = cp * sy;
+    M.m[2][1] = -sp;
+    M.m[2][2] = cp * cy;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = 0.0f;
+    M.m[3][3] = 1.0f;
+    return M;
+#else
+    XMVECTOR Angles = XMVectorSet(Pitch, Yaw, Roll, 0.0f);
+    return XMMatrixRotationRollPitchYawFromVector(XM_REF_1V(Angles));
+#endif
+}
