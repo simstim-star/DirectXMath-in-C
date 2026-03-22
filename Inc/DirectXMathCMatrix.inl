@@ -558,6 +558,28 @@ inline XMMATRIX XM_CALLCONV XMMatrixTranslation
 #endif
 }
 
+inline XMMATRIX XM_CALLCONV XMMatrixLookAtLH
+(
+    FXMVECTOR EyePosition,
+    FXMVECTOR FocusPosition,
+    FXMVECTOR UpDirection
+)
+{
+    XMVECTOR EyeDirection = XMVectorSubtract(FocusPosition, EyePosition);
+    return XMMatrixLookToLH(EyePosition, XM_REF_1V(EyeDirection), UpDirection);
+}
+
+inline XMMATRIX XM_CALLCONV XMMatrixLookAtRH
+(
+    FXMVECTOR EyePosition,
+    FXMVECTOR FocusPosition,
+    FXMVECTOR UpDirection
+)
+{
+    XMVECTOR NegEyeDirection = XMVectorSubtract(EyePosition, FocusPosition);
+    return XMMatrixLookToLH(EyePosition, XM_REF_1V(NegEyeDirection), UpDirection);
+}
+
 inline XMMATRIX XM_CALLCONV XMMatrixLookToLH
 (
     FXMVECTOR EyePosition,
