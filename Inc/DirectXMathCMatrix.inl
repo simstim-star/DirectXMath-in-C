@@ -9,6 +9,8 @@
 #pragma float_control(precise, on)
 #endif
 
+
+
 // Return true if any entry in the matrix is NaN
 inline bool XM_CALLCONV XMMatrixIsNaN(FXMMATRIX M)
 {
@@ -131,6 +133,20 @@ inline bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M)
     vTemp1 = _mm_and_ps(vTemp1, vTemp3);
     return (_mm_movemask_ps(vTemp1) == 0x0f);
 #endif
+}
+
+//------------------------------------------------------------------------------
+// Transformation operations
+//------------------------------------------------------------------------------
+
+inline XMMATRIX XM_CALLCONV XMMatrixIdentity()
+{
+    XMMATRIX M;
+    M.r[0] = g_XMIdentityR0.v;
+    M.r[1] = g_XMIdentityR1.v;
+    M.r[2] = g_XMIdentityR2.v;
+    M.r[3] = g_XMIdentityR3.v;
+    return M;
 }
 
 //------------------------------------------------------------------------------

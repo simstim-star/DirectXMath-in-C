@@ -783,6 +783,8 @@ XM_INLINE XMVECTOR XM_CALLCONV XMPlaneNormalize(FXMVECTOR P);
  Matrix operations
 ****************************************************************************/
 
+XM_INLINE XMMATRIX XM_CALLCONV XMMatrixIdentity();
+
 XM_INLINE bool XM_CALLCONV XMMatrixIsIdentity(FXMMATRIX M);
 #define XM_MAT_IS_ID(M) XMMatrixIsIdentity(XM_REF_1M(M))
 
