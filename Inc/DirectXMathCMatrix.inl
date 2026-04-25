@@ -1209,3 +1209,163 @@ inline XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYaw
     return XMMatrixRotationRollPitchYawFromVector(XM_REF_1V(Angles));
 #endif
 }
+
+inline XMMATRIX XM_CALLCONV XMMatrixRotationX(float Angle)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    float    fSinAngle;
+    float    fCosAngle;
+    XMScalarSinCos(&fSinAngle, &fCosAngle, Angle);
+
+    XMMATRIX M;
+    M.m[0][0] = 1.0f;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = fCosAngle;
+    M.m[1][2] = fSinAngle;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = -fSinAngle;
+    M.m[2][2] = fCosAngle;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = 0.0f;
+    M.m[3][3] = 1.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    float    SinAngle;
+    float    CosAngle;
+    XMScalarSinCos(&SinAngle, &CosAngle, Angle);
+
+    XMVECTOR vSin = _mm_set_ss(SinAngle);
+    XMVECTOR vCos = _mm_set_ss(CosAngle);
+    // x = 0,y = cos,z = sin, w = 0
+    vCos = _mm_shuffle_ps(vCos, vSin, _MM_SHUFFLE(3, 0, 0, 3));
+    XMMATRIX M;
+    M.r[0] = g_XMIdentityR0.v;
+    M.r[1] = vCos;
+    // x = 0,y = sin,z = cos, w = 0
+    vCos = XM_PERMUTE_PS(vCos, _MM_SHUFFLE(3, 1, 2, 0));
+    // x = 0,y = -sin,z = cos, w = 0
+    vCos = _mm_mul_ps(vCos, g_XMNegateY.v);
+    M.r[2] = vCos;
+    M.r[3] = g_XMIdentityR3.v;
+    return M;
+#endif
+}
+
+//------------------------------------------------------------------------------
+
+inline XMMATRIX XM_CALLCONV XMMatrixRotationY(float Angle)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    float    fSinAngle;
+    float    fCosAngle;
+    XMScalarSinCos(&fSinAngle, &fCosAngle, Angle);
+
+    XMMATRIX M;
+    M.m[0][0] = fCosAngle;
+    M.m[0][1] = 0.0f;
+    M.m[0][2] = -fSinAngle;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = 0.0f;
+    M.m[1][1] = 1.0f;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = fSinAngle;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = fCosAngle;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = 0.0f;
+    M.m[3][3] = 1.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    float    SinAngle;
+    float    CosAngle;
+    XMScalarSinCos(&SinAngle, &CosAngle, Angle);
+
+    XMVECTOR vSin = _mm_set_ss(SinAngle);
+    XMVECTOR vCos = _mm_set_ss(CosAngle);
+    // x = sin,y = 0,z = cos, w = 0
+    vSin = _mm_shuffle_ps(vSin, vCos, _MM_SHUFFLE(3, 0, 3, 0));
+    XMMATRIX M;
+    M.r[2] = vSin;
+    M.r[1] = g_XMIdentityR1.v;
+    // x = cos,y = 0,z = sin, w = 0
+    vSin = XM_PERMUTE_PS(vSin, _MM_SHUFFLE(3, 0, 1, 2));
+    // x = cos,y = 0,z = -sin, w = 0
+    vSin = _mm_mul_ps(vSin, g_XMNegateZ.v);
+    M.r[0] = vSin;
+    M.r[3] = g_XMIdentityR3.v;
+    return M;
+#endif
+}
+
+//------------------------------------------------------------------------------
+
+inline XMMATRIX XM_CALLCONV XMMatrixRotationZ(float Angle)
+{
+#if defined(_XM_NO_INTRINSICS_)
+
+    float    fSinAngle;
+    float    fCosAngle;
+    XMScalarSinCos(&fSinAngle, &fCosAngle, Angle);
+
+    XMMATRIX M;
+    M.m[0][0] = fCosAngle;
+    M.m[0][1] = fSinAngle;
+    M.m[0][2] = 0.0f;
+    M.m[0][3] = 0.0f;
+
+    M.m[1][0] = -fSinAngle;
+    M.m[1][1] = fCosAngle;
+    M.m[1][2] = 0.0f;
+    M.m[1][3] = 0.0f;
+
+    M.m[2][0] = 0.0f;
+    M.m[2][1] = 0.0f;
+    M.m[2][2] = 1.0f;
+    M.m[2][3] = 0.0f;
+
+    M.m[3][0] = 0.0f;
+    M.m[3][1] = 0.0f;
+    M.m[3][2] = 0.0f;
+    M.m[3][3] = 1.0f;
+    return M;
+
+#elif defined(_XM_SSE_INTRINSICS_)
+    float    SinAngle;
+    float    CosAngle;
+    XMScalarSinCos(&SinAngle, &CosAngle, Angle);
+
+    XMVECTOR vSin = _mm_set_ss(SinAngle);
+    XMVECTOR vCos = _mm_set_ss(CosAngle);
+    // x = cos,y = sin,z = 0, w = 0
+    vCos = _mm_unpacklo_ps(vCos, vSin);
+    XMMATRIX M;
+    M.r[0] = vCos;
+    // x = sin,y = cos,z = 0, w = 0
+    vCos = XM_PERMUTE_PS(vCos, _MM_SHUFFLE(3, 2, 0, 1));
+    // x = cos,y = -sin,z = 0, w = 0
+    vCos = _mm_mul_ps(vCos, g_XMNegateX.v);
+    M.r[1] = vCos;
+    M.r[2] = g_XMIdentityR2.v;
+    M.r[3] = g_XMIdentityR3.v;
+    return M;
+#endif
+}

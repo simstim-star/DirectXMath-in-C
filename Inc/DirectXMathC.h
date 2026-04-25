@@ -839,6 +839,10 @@ XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYawFromVector(FXMVECTOR 
 XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationRollPitchYaw(float Pitch, float Yaw, float Row);
 #define XM_MAT_ROTATION_ROLL_PITCH_YAW(P,Y,R) XMMatrixRotationRollPitchYaw(P,Y,R)
 
+XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationX(float Angle);
+XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationY(float Angle);
+XM_INLINE XMMATRIX XM_CALLCONV XMMatrixRotationZ(float Angle);
+
 /****************************************************************************
 *
 * Quaternion operations
@@ -934,6 +938,10 @@ XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR0 = { { -1.0f, 0.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR1 = { { 0.0f, -1.0f, 0.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR2 = { { 0.0f, 0.0f, -1.0f, 0.0f } };
 XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR3 = { { 0.0f, 0.0f, 0.0f, -1.0f } };
+XMGLOBALCONST XMVECTORF32 g_XMNegateX = { { { -1.0f, 1.0f, 1.0f, 1.0f } } };
+XMGLOBALCONST XMVECTORF32 g_XMNegateY = { { { 1.0f, -1.0f, 1.0f, 1.0f } } };
+XMGLOBALCONST XMVECTORF32 g_XMNegateZ = { { { 1.0f, 1.0f, -1.0f, 1.0f } } };
+XMGLOBALCONST XMVECTORF32 g_XMNegateW = { { { 1.0f, 1.0f, 1.0f, -1.0f } } };
 XMGLOBALCONST XMVECTORI32 g_XMInfinity = { { 0x7F800000, 0x7F800000, 0x7F800000, 0x7F800000 } };
 XMGLOBALCONST XMVECTORI32 g_XMQNaN = { { 0x7FC00000, 0x7FC00000, 0x7FC00000, 0x7FC00000 } };
 XMGLOBALCONST XMVECTORI32 g_XMAbsMask = { { 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF } };
